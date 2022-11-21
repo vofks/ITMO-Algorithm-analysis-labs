@@ -305,7 +305,7 @@ void ArrayList<T>::Iterator::Next() {
 template <typename T>
 bool ArrayList<T>::Iterator::HasNext() const {
   int next_index = index_ + offset_;
-  return (next_index >= 0) && (next_index < array_.size_);
+  return (next_index >= -1) && (next_index <= array_.size_);
 }
 
 template <typename T>
