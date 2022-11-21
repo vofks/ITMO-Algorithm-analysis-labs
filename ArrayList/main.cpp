@@ -10,11 +10,11 @@ int main() {
     a.Insert(i);
   }
 
-  for (auto it = a.iterator(); it.HasNext(); it.Next()) {
+  for (auto it = a.iterator(); it.HasCurrent(); it.Next()) {
     std::cout << it.Get() << std::endl;
   }
 
-  for (auto it = a.reverseIterator(); it.HasNext(); it.Next()) {
+  for (auto it = a.reverseIterator(); it.HasCurrent(); it.Next()) {
     std::cout << it.Get() << std::endl;
   }
 }

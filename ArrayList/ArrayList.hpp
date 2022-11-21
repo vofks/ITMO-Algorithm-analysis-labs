@@ -56,7 +56,7 @@ class ArrayList<T>::Iterator {
   T& Get() const;
   void Set(const T&);
   void Next();
-  bool HasNext() const;
+  bool HasCurrent() const;
 
  private:
   int index_;
@@ -76,7 +76,7 @@ class ArrayList<T>::ConstIterator {
 
   const T& Get() const;
   void Next();
-  bool HasNext() const;
+  bool HasCurrent() const;
 
  private:
   int index_;
@@ -303,9 +303,8 @@ void ArrayList<T>::Iterator::Next() {
 }
 
 template <typename T>
-bool ArrayList<T>::Iterator::HasNext() const {
-  int next_index = index_ + offset_;
-  return (next_index >= -1) && (next_index <= array_.size_);
+bool ArrayList<T>::Iterator::HasCurrent() const {
+  return (index_ >= 0) && (index_ <= array_.size_ - 1);
 }
 
 template <typename T>
@@ -353,9 +352,8 @@ void ArrayList<T>::ConstIterator::Next() {
 }
 
 template <typename T>
-bool ArrayList<T>::ConstIterator::HasNext() const {
-  int next_index = index_ + offset_;
-  return (next_index >= 0) && (next_index < array_.size_);
+bool ArrayList<T>::ConstIterator::HasCurrent() const {
+  return (index_ >= 0) && (index_ < array_.size_ - 1);
 }
 
 template <typename T>

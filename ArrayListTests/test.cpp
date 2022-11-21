@@ -403,7 +403,7 @@ TEST(Iterator, Can_Get_Iterator) {
   ArrayList<int>::Iterator it = a.iterator();
   int i = 0;
 
-  for (; it.HasNext(); it.Next()) {
+  for (; it.HasCurrent(); it.Next()) {
     ASSERT_EQ(it.Get(), i);
     ++i;
   }
@@ -420,7 +420,7 @@ TEST(ReverseIterator, Can_Get_ReverseIterator) {
   ArrayList<int>::Iterator it = a.reverseIterator();
   int i = 0;
 
-  for (; it.HasNext(); it.Next()) {
+  for (; it.HasCurrent(); it.Next()) {
     ASSERT_EQ(it.Get(), i);
     ++i;
   }
