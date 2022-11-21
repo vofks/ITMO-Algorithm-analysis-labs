@@ -15,7 +15,7 @@ class ArrayList final {
   ArrayList();
   ArrayList(int);
   ArrayList(const ArrayList<T>&);
-  ArrayList(ArrayList<T>&&);
+  ArrayList(ArrayList<T>&&) noexcept;
 
   const T& operator[](int) const;
   T& operator[](int);
@@ -38,15 +38,15 @@ class ArrayList final {
  private:
   void Swap(ArrayList&);
 
-  size_t size_;
-  size_t capacity_;
+  int size_;
+  int capacity_;
   T* ptr_;
 };
 
 template <typename T>
 class ArrayList<T>::Iterator {
  public:
-  Iterator(const ArrayList<T>&, int, int);
+  Iterator(ArrayList<T>&, int, int);
 
   Iterator operator++();
   Iterator operator++(int);
@@ -61,7 +61,7 @@ class ArrayList<T>::Iterator {
  private:
   int index_;
   int offset_;
-  const ArrayList<T>& array_;
+  ArrayList<T>& array_;
 };
 
 template <typename T>
@@ -81,7 +81,7 @@ class ArrayList<T>::ConstIterator {
  private:
   int index_;
   int offset_;
-  const ArrayList<T>& array_;
+  ArrayList<T>& array_;
 };
 
 template <typename T>
@@ -106,12 +106,12 @@ inline ArrayList<T>::ArrayList(const ArrayList<T>& other) {
   ptr_ = (T*)malloc(capacity_ * sizeof(T));
 
   for (int i = 0; i < size_; ++i) {
-    new (ptr_ + i) T(std::move(other.ptr_[i]));
+    new (ptr_ + i) T(other.ptr_[i]);
   }
 }
 
 template <typename T>
-inline ArrayList<T>::ArrayList(ArrayList<T>&& rhs) {
+inline ArrayList<T>::ArrayList(ArrayList<T>&& rhs) noexcept {
   capacity_ = rhs.capacity_;
   size_ = rhs.size_;
   ptr_ = rhs.ptr_;
@@ -235,10 +235,11 @@ inline void ArrayList<T>::Remove(int index) {
   }
 
   for (int i = index + 1; i < size_; ++i) {
-    ptr_[i - 1] = ptr_[std::move(ptr_[i])];
+    ptr_[i - 1] = std::move(ptr_[i]);
   }
 
   ptr_[size_ - 1].~T();
+  --size_;
 }
 
 template <typename T>
@@ -253,7 +254,7 @@ inline int ArrayList<T>::Capacity() const {
 
 template <typename T>
 inline typename ArrayList<T>::Iterator ArrayList<T>::iterator() {
-  return ArrayList<T>::Iterator(this, 0, 1);
+  return ArrayList<T>::Iterator(*this, 0, 1);
 }
 
 template <typename T>
@@ -263,7 +264,7 @@ inline typename ArrayList<T>::ConstIterator ArrayList<T>::iterator() const {
 
 template <typename T>
 inline typename ArrayList<T>::Iterator ArrayList<T>::reverseIterator() {
-  return ArrayList<T>::Iterator(this, this->size_ - 1, -1);
+  return ArrayList<T>::Iterator(*this, this->size_ - 1, -1);
 }
 
 template <typename T>
@@ -277,6 +278,112 @@ inline void ArrayList<T>::Swap(ArrayList<T>& rhs) {
   std::swap(size_, rhs.size_);
   std::swap(capacity_, rhs.capacity_);
   std::swap(ptr_, rhs.ptr_);
+}
+
+template <typename T>
+ArrayList<T>::Iterator::Iterator(ArrayList<T>& array, int index, int offset)
+    : array_(array) {
+  index_ = index;
+  offset_ = offset;
+}
+
+template <typename T>
+T& ArrayList<T>::Iterator::Get() const {
+  return array_[index_];
+}
+
+template <typename T>
+void ArrayList<T>::Iterator::Set(const T& value) {
+  array_[index_] = value;
+}
+
+template <typename T>
+void ArrayList<T>::Iterator::Next() {
+  index_ += offset_;
+}
+
+template <typename T>
+bool ArrayList<T>::Iterator::HasNext() const {
+  int next_index = index_ + offset_;
+  return (next_index >= 0) && (next_index < array_.size_);
+}
+
+template <typename T>
+typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++() {
+  index_++;
+  return *this;
+}
+
+template <typename T>
+typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++(int) {
+  ArrayList<T>::Iterator it = *this;
+  index_++;
+  return it;
+}
+
+template <typename T>
+typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--() {
+  index_--;
+  return *this;
+}
+
+template <typename T>
+typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--(int) {
+  ArrayList<T>::Iterator it = *this;
+  index_--;
+  return it;
+}
+
+template <typename T>
+ArrayList<T>::ConstIterator::ConstIterator(const ArrayList<T>& array, int index,
+                                           int offset) {
+  array_ = array;
+  index_ = index;
+  offset_ = offset;
+}
+
+template <typename T>
+const T& ArrayList<T>::ConstIterator::Get() const {
+  return array_[index_];
+}
+
+template <typename T>
+void ArrayList<T>::ConstIterator::Next() {
+  index_ += offset_;
+}
+
+template <typename T>
+bool ArrayList<T>::ConstIterator::HasNext() const {
+  int next_index = index_ + offset_;
+  return (next_index >= 0) && (next_index < array_.size_);
+}
+
+template <typename T>
+typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator++() {
+  index_++;
+  return *this;
+}
+
+template <typename T>
+typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator++(
+    int) {
+  ArrayList<T>::ConstIterator it = *this;
+  index_++;
+  return it;
+}
+
+template <typename T>
+typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator--() {
+  index_--;
+  return *this;
+}
+
+template <typename T>
+typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator--(
+    int) {
+  ArrayList<T>::ConstIterator it = *this;
+  index_--;
+  return it;
 }
 
 #endif  // ARRAYLIST_HPP_
