@@ -396,6 +396,21 @@ TEST(ArrayList, Can_Not_Remove_At_Incorrect_Index) {
   });
 }
 
+TEST(ArrayList, Supports_Range_For) {
+  const int array_size = 100;
+  ArrayList<int> src;
+
+  for (int i = 0; i < array_size; ++i) {
+    src.Insert(i);
+  }
+
+  int i = 0;
+  for (const auto &e : src) {
+    ASSERT_EQ(e, src[i]);
+    ++i;
+  }
+}
+
 TEST(Iterator, Can_Get_Iterator) {
   const int array_size = 100;
   ArrayList<int> a;

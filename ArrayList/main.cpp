@@ -1,20 +1,16 @@
+#include <iostream>
+#include <string>
+
 #include "ArrayList.hpp"
 
-#include <iostream>
-
-
 int main() {
-  ArrayList<int> a;
+  ArrayList<std::string> a;
 
   for (int i = 0; i < 10; ++i) {
-    a.Insert(i);
+    a.Insert("aaa" + std::to_string(i));
   }
 
-  for (auto it = a.iterator(); it.HasCurrent(); it.Next()) {
-    std::cout << it.Get() << std::endl;
-  }
-
-  for (auto it = a.reverseIterator(); it.HasCurrent(); it.Next()) {
-    std::cout << it.Get() << std::endl;
+  for (const auto& e : a) {
+    std::cout << e << std::endl;
   }
 }

@@ -34,6 +34,10 @@ class ArrayList final {
   ConstIterator iterator() const;
   Iterator reverseIterator();
   ConstIterator reverseIterator() const;
+  Iterator begin();
+  ConstIterator cbegin() const;
+  Iterator end();
+  ConstIterator cend() const;
 
  private:
   void Swap(ArrayList&);
@@ -52,6 +56,9 @@ class ArrayList<T>::Iterator {
   Iterator operator++(int);
   Iterator operator--();
   Iterator operator--(int);
+  bool operator==(const Iterator&);
+  bool operator!=(const Iterator&);
+  T& operator*();
 
   T& Get() const;
   void Set(const T&);
@@ -73,6 +80,9 @@ class ArrayList<T>::ConstIterator {
   ConstIterator operator++(int);
   ConstIterator operator--();
   ConstIterator operator--(int);
+  bool operator==(const ConstIterator&);
+  bool operator!=(const ConstIterator&);
+  const T& operator*();
 
   const T& Get() const;
   void Next();
@@ -274,6 +284,26 @@ inline typename ArrayList<T>::ConstIterator ArrayList<T>::reverseIterator()
 }
 
 template <typename T>
+inline typename ArrayList<T>::Iterator ArrayList<T>::begin() {
+  return iterator();
+}
+
+template <typename T>
+inline typename ArrayList<T>::Iterator ArrayList<T>::end() {
+  return ArrayList<T>::Iterator(*this, size_, 1);
+}
+
+template <typename T>
+inline typename ArrayList<T>::ConstIterator ArrayList<T>::cbegin() const {
+  return iterator();
+}
+
+template <typename T>
+inline typename ArrayList<T>::ConstIterator ArrayList<T>::cend() const {
+  return ArrayList<T>::ConstIterator(*this, size_, 1);
+}
+
+template <typename T>
 inline void ArrayList<T>::Swap(ArrayList<T>& rhs) {
   std::swap(size_, rhs.size_);
   std::swap(capacity_, rhs.capacity_);
@@ -281,107 +311,146 @@ inline void ArrayList<T>::Swap(ArrayList<T>& rhs) {
 }
 
 template <typename T>
-ArrayList<T>::Iterator::Iterator(ArrayList<T>& array, int index, int offset)
+inline ArrayList<T>::Iterator::Iterator(ArrayList<T>& array, int index,
+                                        int offset)
     : array_(array) {
   index_ = index;
   offset_ = offset;
 }
 
 template <typename T>
-T& ArrayList<T>::Iterator::Get() const {
+inline T& ArrayList<T>::Iterator::Get() const {
   return array_[index_];
 }
 
 template <typename T>
-void ArrayList<T>::Iterator::Set(const T& value) {
+inline void ArrayList<T>::Iterator::Set(const T& value) {
   array_[index_] = value;
 }
 
 template <typename T>
-void ArrayList<T>::Iterator::Next() {
+inline void ArrayList<T>::Iterator::Next() {
   index_ += offset_;
 }
 
 template <typename T>
-bool ArrayList<T>::Iterator::HasCurrent() const {
+inline bool ArrayList<T>::Iterator::HasCurrent() const {
   return (index_ >= 0) && (index_ <= array_.size_ - 1);
 }
 
 template <typename T>
-typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++() {
+inline typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++() {
   index_++;
   return *this;
 }
 
 template <typename T>
-typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++(int) {
+inline typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator++(int) {
   ArrayList<T>::Iterator it = *this;
   index_++;
   return it;
 }
 
 template <typename T>
-typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--() {
+inline typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--() {
   index_--;
   return *this;
 }
 
 template <typename T>
-typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--(int) {
+inline typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--(int) {
   ArrayList<T>::Iterator it = *this;
   index_--;
   return it;
 }
 
 template <typename T>
-ArrayList<T>::ConstIterator::ConstIterator(const ArrayList<T>& array, int index,
-                                           int offset)
+inline bool ArrayList<T>::Iterator::operator==(
+    const ArrayList<T>::Iterator& rhs) {
+  return index_ == rhs.index_ && offset_ == rhs.offset_ &&
+         &array_ == &rhs.array_;
+}
+
+template <typename T>
+inline bool ArrayList<T>::Iterator::operator!=(
+    const ArrayList<T>::Iterator& rhs) {
+  return !(*this == rhs);
+}
+
+template <typename T>
+inline T& ArrayList<T>::Iterator::operator*() {
+  return array_.ptr_[index_];
+}
+
+template <typename T>
+inline ArrayList<T>::ConstIterator::ConstIterator(const ArrayList<T>& array,
+                                                  int index, int offset)
     : array_(array) {
   index_ = index;
   offset_ = offset;
 }
 
 template <typename T>
-const T& ArrayList<T>::ConstIterator::Get() const {
+inline const T& ArrayList<T>::ConstIterator::Get() const {
   return array_[index_];
 }
 
 template <typename T>
-void ArrayList<T>::ConstIterator::Next() {
+inline void ArrayList<T>::ConstIterator::Next() {
   index_ += offset_;
 }
 
 template <typename T>
-bool ArrayList<T>::ConstIterator::HasCurrent() const {
+inline bool ArrayList<T>::ConstIterator::HasCurrent() const {
   return (index_ >= 0) && (index_ < array_.size_ - 1);
 }
 
 template <typename T>
-typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator++() {
+inline typename ArrayList<T>::ConstIterator
+ArrayList<T>::ConstIterator::operator++() {
   index_++;
   return *this;
 }
 
 template <typename T>
-typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator++(
-    int) {
+inline typename ArrayList<T>::ConstIterator
+ArrayList<T>::ConstIterator::operator++(int) {
   ArrayList<T>::ConstIterator it = *this;
   index_++;
   return it;
 }
 
 template <typename T>
-typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator--() {
+inline typename ArrayList<T>::ConstIterator
+ArrayList<T>::ConstIterator::operator--() {
   index_--;
   return *this;
 }
 
 template <typename T>
-typename ArrayList<T>::ConstIterator ArrayList<T>::ConstIterator::operator--(
-    int) {
+inline typename ArrayList<T>::ConstIterator
+ArrayList<T>::ConstIterator::operator--(int) {
   ArrayList<T>::ConstIterator it = *this;
   index_--;
   return it;
+}
+
+template <typename T>
+inline bool ArrayList<T>::ConstIterator::operator==(
+    const ArrayList<T>::ConstIterator& rhs) {
+  return index_ == rhs.index_ && offset_ == rhs.offset_ &&
+         &array_ == &rhs.array_;
+}
+
+template <typename T>
+inline bool ArrayList<T>::ConstIterator::operator!=(
+    const ArrayList<T>::ConstIterator& rhs) {
+  return !(*this == rhs);
+}
+
+template <typename T>
+inline const T& ArrayList<T>::ConstIterator::operator*() {
+  return array_.ptr_[index_];
 }
 
 #endif  // ARRAYLIST_HPP_
