@@ -81,7 +81,7 @@ class ArrayList<T>::ConstIterator {
  private:
   int index_;
   int offset_;
-  ArrayList<T>& array_;
+  const ArrayList<T>& array_;
 };
 
 template <typename T>
@@ -259,7 +259,7 @@ inline typename ArrayList<T>::Iterator ArrayList<T>::iterator() {
 
 template <typename T>
 inline typename ArrayList<T>::ConstIterator ArrayList<T>::iterator() const {
-  return ArrayList<T>::ConstIterator(this, 0, 1);
+  return ArrayList<T>::ConstIterator(*this, 0, 1);
 }
 
 template <typename T>
@@ -270,7 +270,7 @@ inline typename ArrayList<T>::Iterator ArrayList<T>::reverseIterator() {
 template <typename T>
 inline typename ArrayList<T>::ConstIterator ArrayList<T>::reverseIterator()
     const {
-  return ArrayList<T>::ConstIterator(this, this->size_ - 1, -1);
+  return ArrayList<T>::ConstIterator(*this, this->size_ - 1, -1);
 }
 
 template <typename T>
@@ -335,8 +335,8 @@ typename ArrayList<T>::Iterator ArrayList<T>::Iterator::operator--(int) {
 
 template <typename T>
 ArrayList<T>::ConstIterator::ConstIterator(const ArrayList<T>& array, int index,
-                                           int offset) {
-  array_ = array;
+                                           int offset)
+    : array_(array) {
   index_ = index;
   offset_ = offset;
 }

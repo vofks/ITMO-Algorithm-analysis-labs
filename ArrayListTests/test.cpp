@@ -1,6 +1,8 @@
 #include "pch.h"
-#include "../ArrayList/ArrayList.hpp"
+
 #include <string>
+
+#include "../ArrayList/ArrayList.hpp"
 
 
 TEST(ArrayList, Default_Constructor_Creates_Array_With_Zero_Size) {
@@ -49,7 +51,7 @@ TEST(ArrayList, Copy_Constructor_Creates_Array_With_Correct_Capacity) {
 
 TEST(ArrayList, Copy_Constructor_Creates_Array_With_Correct_Primitive_Buffer) {
   const int array_size = 100;
-  ArrayList<int> src;  
+  ArrayList<int> src;
 
   for (int i = 0; i < array_size; ++i) {
     src.Insert(i);
@@ -64,7 +66,8 @@ TEST(ArrayList, Copy_Constructor_Creates_Array_With_Correct_Primitive_Buffer) {
 
 TEST(ArrayList, Copy_Constructor_Creates_Array_With_Correct_Complex_Buffer) {
   const int array_size = 100;
-  std::string str = "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
+  std::string str =
+      "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
       "lobortis scelerisque fermentum dui faucibus";
   ArrayList<std::string> src;
 
@@ -179,13 +182,12 @@ TEST(ArrayList,
 
   ArrayList<int> dst = src;
 
-  for (int i = 0; i < array_size; ++i){
+  for (int i = 0; i < array_size; ++i) {
     ASSERT_EQ(dst[i], src[i]);
   }
 }
 
-TEST(ArrayList,
-     Assignment_Operator_Creates_Array_With_Correct_Complex_Buffer) {
+TEST(ArrayList, Assignment_Operator_Creates_Array_With_Correct_Complex_Buffer) {
   const int array_size = 100;
   std::string str =
       "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
@@ -247,7 +249,8 @@ TEST(ArrayList,
   }
 }
 
-TEST(ArrayList, Move_Assignment_Operator_Creates_Array_With_Correct_Complex_Buffer) {
+TEST(ArrayList,
+     Move_Assignment_Operator_Creates_Array_With_Correct_Complex_Buffer) {
   const int array_size = 100;
   std::string str =
       "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
@@ -265,7 +268,7 @@ TEST(ArrayList, Move_Assignment_Operator_Creates_Array_With_Correct_Complex_Buff
   }
 }
 
-TEST(ArrayList, Push_Back_Icreases_Size) { 
+TEST(ArrayList, Push_Back_Icreases_Size) {
   ArrayList<int> src;
 
   src.Insert(5);
@@ -275,7 +278,7 @@ TEST(ArrayList, Push_Back_Icreases_Size) {
   ASSERT_EQ(src.Size(), 2);
 }
 
-TEST(ArrayList, Insert_Icreases_Size) { 
+TEST(ArrayList, Insert_Icreases_Size) {
   ArrayList<int> src;
 
   src.Insert(12);
@@ -284,8 +287,7 @@ TEST(ArrayList, Insert_Icreases_Size) {
   ASSERT_EQ(src.Size(), 2);
 }
 
-
-TEST(ArrayList, Can_Push_Back_Primitive_Type) { 
+TEST(ArrayList, Can_Push_Back_Primitive_Type) {
   ArrayList<int> src;
 
   src.Insert(3);
@@ -330,7 +332,8 @@ TEST(ArrayList, Can_Insert_Complex_Type) {
 }
 
 TEST(ArrayList, Insert_To_Full_List_Doubles_Capacity) {
-  const std::string str = "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
+  const std::string str =
+      "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
       "lobortis scelerisque fermentum dui faucibus";
   const int capacity = 1;
   ArrayList<std::string> src(capacity);
@@ -384,12 +387,13 @@ TEST(ArrayList, Can_Remove_Complex_Element) {
   ASSERT_NE(a[index_to_remove], removed);
 }
 
-TEST(ArrayList, Can_Not_Remove_At_Incorrect_Index) { 
-  ASSERT_NO_THROW({ ArrayList<int> a;
+TEST(ArrayList, Can_Not_Remove_At_Incorrect_Index) {
+  ASSERT_NO_THROW({
+    ArrayList<int> a;
     a.Remove(-23);
     a.Remove(0);
     a.Remove(100);
-      });
+  });
 }
 
 TEST(Iterator, Can_Get_Iterator) {
@@ -409,7 +413,23 @@ TEST(Iterator, Can_Get_Iterator) {
   }
 }
 
-TEST(ReverseIterator, Can_Get_ReverseIterator) {
+TEST(Iterator, Can_Set_Value) {
+  const int array_size = 10;
+  const int new_value = 333;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(a[i]);
+  }
+
+  ArrayList<int>::Iterator it = a.iterator();
+  it.Next();
+  it.Set(new_value);
+
+  ASSERT_EQ(a[1], new_value);
+}
+
+TEST(Iterator, Can_Get_ReverseIterator) {
   const int array_size = 100;
   ArrayList<int> a;
 
@@ -418,10 +438,192 @@ TEST(ReverseIterator, Can_Get_ReverseIterator) {
   }
 
   ArrayList<int>::Iterator it = a.reverseIterator();
+  int i = array_size - 1;
+
+  for (; it.HasCurrent(); it.Next()) {
+    ASSERT_EQ(it.Get(), i);
+    --i;
+  }
+}
+
+TEST(Iterator, Can_Pre_Increment) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  ArrayList<int>::Iterator it = a.iterator();
+  int i = 0;
+
+  for (; it.HasCurrent(); ++it) {
+    ASSERT_EQ(it.Get(), i);
+    ++i;
+  }
+}
+
+TEST(Iterator, Can_Post_Increment) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  ArrayList<int>::Iterator it = a.iterator();
+  int i = 0;
+
+  for (; it.HasCurrent(); it++) {
+    ASSERT_EQ(it.Get(), i);
+    ++i;
+  }
+}
+
+TEST(Iterator, Can_Pre_Decrement) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  ArrayList<int>::Iterator it = a.reverseIterator();
+  int i = array_size - 1;
+
+  for (; it.HasCurrent(); --it) {
+    ASSERT_EQ(it.Get(), i);
+    --i;
+  }
+}
+
+TEST(Iterator, Can_Post_Decrement) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  ArrayList<int>::Iterator it = a.reverseIterator();
+  int i = array_size - 1;
+
+  for (; it.HasCurrent(); it--) {
+    ASSERT_EQ(it.Get(), i);
+    --i;
+  }
+}
+
+TEST(ConstIterator, Can_Get_Iterator) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  const ArrayList<int> b(a);
+
+  ArrayList<int>::ConstIterator it = b.iterator();
   int i = 0;
 
   for (; it.HasCurrent(); it.Next()) {
     ASSERT_EQ(it.Get(), i);
     ++i;
+  }
+}
+
+TEST(ConstIterator, Can_Get_ReverseIterator) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  const ArrayList<int> b(a);
+
+  ArrayList<int>::ConstIterator it = b.reverseIterator();
+  int i = array_size - 1;
+
+  for (; it.HasCurrent(); it.Next()) {
+    ASSERT_EQ(it.Get(), i);
+    --i;
+  }
+}
+
+TEST(ConstIterator, Can_Pre_Increment) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  const ArrayList<int> b(a);
+
+  ArrayList<int>::ConstIterator it = b.iterator();
+  int i = 0;
+
+  for (; it.HasCurrent(); ++it) {
+    ASSERT_EQ(it.Get(), i);
+    ++i;
+  }
+}
+
+TEST(ConstIterator, Can_Post_Increment) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  const ArrayList<int> b(a);
+
+  ArrayList<int>::ConstIterator it = b.iterator();
+  int i = 0;
+
+  for (; it.HasCurrent(); it++) {
+    ASSERT_EQ(it.Get(), i);
+    ++i;
+  }
+}
+
+TEST(ConstIterator, Can_Pre_Decrement) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  const ArrayList<int> b(a);
+
+  ArrayList<int>::ConstIterator it = b.reverseIterator();
+  int i = array_size - 1;
+
+  for (; it.HasCurrent(); --it) {
+    ASSERT_EQ(it.Get(), i);
+    --i;
+  }
+}
+
+TEST(ConstIterator, Can_Post_Decrement) {
+  const int array_size = 100;
+  ArrayList<int> a;
+
+  for (int i = 0; i < array_size; ++i) {
+    a.Insert(i);
+  }
+
+  const ArrayList<int> b(a);
+
+  ArrayList<int>::ConstIterator it = b.reverseIterator();
+  int i = array_size - 1;
+
+  for (; it.HasCurrent(); it--) {
+    ASSERT_EQ(it.Get(), i);
+    --i;
   }
 }
