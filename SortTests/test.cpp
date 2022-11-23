@@ -1,6 +1,9 @@
 #include "pch.h"
 
+#include <random>
+
 #include "../Sort/Sort.hpp"
+
 
 TEST(Median, Median_Performs_Correct_Sort) {
   int a[] = {1, 2, 3};
@@ -33,4 +36,44 @@ TEST(Median, Median_Performs_Correct_Sort) {
   ASSERT_EQ(*pivot, 4);
   ASSERT_EQ(e[0], 1);
   ASSERT_EQ(e[3], 4);
+}
+
+TEST(InsertionSort, Sorts_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 100000;
+  int* ptr = new int[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = gen();
+  }
+
+  InsertionSort(ptr, ptr + size - 1,
+                [](const int& a, const int& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
+TEST(QuickSort, Sorts_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 100000;
+  int* ptr = new int[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = gen();
+  }
+
+  QuickSort(ptr, ptr + size - 1,
+                [](const int& a, const int& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
 }

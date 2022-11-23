@@ -5,14 +5,14 @@
 const int kLengthThreshold = 4;
 
 template <typename T>
-void PrintArray(T* ptr, int size) {
+inline void PrintArray(T* ptr, int size) {
   int i = 0;
   for (; i < size; ++i) std::cout << ptr[i] << " ";
   std::cout << std::endl;
 }
 
 template <typename T, typename TCompare>
-T* Median(T* low, T* high, TCompare comp) {
+inline T* Median(T* low, T* high, TCompare comp) {
   T* middle = low + (high - low) / 2;
 
   if (comp(*high, *low)) std::swap(*high, *low);
@@ -23,7 +23,7 @@ T* Median(T* low, T* high, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
-void InsertionSort(T* start, T* end, TCompare comp) {
+inline void InsertionSort(T* start, T* end, TCompare comp) {
   if (start == end) {
     return;
   }
@@ -46,36 +46,8 @@ void InsertionSort(T* start, T* end, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
-T* Partition(T* low, T* high, TCompare comp) {
-  T* middle = low + (high - low) / 2;
-
-  if (comp(*high, *low)) std::swap(*high, *low);
-  if (comp(*middle, *low)) std::swap(*middle, *low);
-  if (comp(*high, *middle)) std::swap(*high, *middle);
-
-  std::swap(*middle, *(high - 1));
-  T pivot = *(high - 1);
-
-  T* i = low - 1;
-  T* j = high + 1;
-
-  while (true) {
-    while (comp(*(++i), pivot))
-      ;
-    while (comp(pivot, *(--j)))
-      ;
-
-    if (i >= j) {
-      return j;
-    }
-
-    std::swap(*i, *j);
-  }
-}
-
-template <typename T, typename TCompare>
-T* HoarePartition(T* low, T* high, TCompare comp) {
-  T pivot = *low;
+inline T* HoarePartition(T* low, T* high, TCompare comp) {
+  T pivot = *Median(low, high, comp);
   T* i = low - 1;
   T* j = high + 1;
 
@@ -94,10 +66,11 @@ T* HoarePartition(T* low, T* high, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
-T* LomutoPartition(T* low, T* high, TCompare comp) {
+inline T* LomutoPartition(T* low, T* high, TCompare comp) {
   T* pivot = high;
   T* i = low - 1;
   T* j = low;
+
   for (; j < high; ++j) {
     if (comp(*j, *pivot)) {
       ++i;
@@ -113,14 +86,14 @@ T* LomutoPartition(T* low, T* high, TCompare comp) {
 template <typename T, typename TCompare>
 void QuickSort(T* low, T* high, TCompare comp) {
   if (low < high) {
-    /*if (high - low < kLengthThreshold) {
+    if (high - low < kLengthThreshold) {
       InsertionSort(low, high, comp);
       return;
-    }*/
+    }
 
     T* pi = HoarePartition(low, high, comp);
 
-    QuickSort(low, pi - 1, comp);
+    QuickSort(low, pi, comp);
     QuickSort(pi + 1, high, comp);
   }
 }
