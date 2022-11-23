@@ -74,14 +74,31 @@ T* Partition(T* low, T* high, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
+T* LomutoPartition(T* low, T* high, TCompare comp) {
+  T* pivot = high;
+  T* i = low - 1;
+  T* j = low;
+  for (; j < high; ++j) {
+    if (comp(*j, *pivot)) {
+      ++i;
+      std::swap(*i, *j);
+    }
+  }
+
+  std::swap(*(i + 1), *high);
+
+  return i + 1;
+}
+
+template <typename T, typename TCompare>
 void QuickSort(T* low, T* high, TCompare comp) {
   if (low < high) {
-    if (high - low < kLengthThreshold) {
+    /*if (high - low < kLengthThreshold) {
       InsertionSort(low, high, comp);
       return;
-    }
+    }*/
 
-    T* pi = Partition(low, high, comp);
+    T* pi = LomutoPartition(low, high, comp);
 
     QuickSort(low, pi - 1, comp);
     QuickSort(pi + 1, high, comp);
