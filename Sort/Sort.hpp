@@ -11,19 +11,15 @@ void PrintArray(T* ptr, int size) {
   std::cout << std::endl;
 }
 
-template <typename T, typename TComapre>
-T Median(
-    const T& first, const T& middle, const T& last,
-    TComapre comp) {  // TODO: (Bug) incorrect median on (3,3,2) and similar
-  if (comp(first, middle) && comp(last, first) ||
-      comp(first, last) && comp(middle, first)) {
-    return first;
-  } else if (comp(middle, first) && comp(last, middle) ||
-             comp(middle, last) && comp(first, middle)) {
-    return middle;
-  }
+template <typename T, typename TCompare>
+T* Median(T* low, T* high, TCompare comp) {
+  T* middle = low + (high - low) / 2;
 
-  return last;
+  if (comp(*high, *low)) std::swap(*high, *low);
+  if (comp(*middle, *low)) std::swap(*middle, *low);
+  if (comp(*high, *middle)) std::swap(*middle, *high);
+
+  return middle;
 }
 
 template <typename T, typename TCompare>
