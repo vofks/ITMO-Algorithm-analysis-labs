@@ -74,6 +74,26 @@ T* Partition(T* low, T* high, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
+T* HoarePartition(T* low, T* high, TCompare comp) {
+  T pivot = *low;
+  T* i = low - 1;
+  T* j = high + 1;
+
+  while (true) {
+    do {
+      ++i;
+    } while (comp(*i, pivot));
+    do {
+      --j;
+    } while (comp(pivot, *j));
+
+    if (i >= j) return j;
+
+    std::swap(*i, *j);
+  }
+}
+
+template <typename T, typename TCompare>
 T* LomutoPartition(T* low, T* high, TCompare comp) {
   T* pivot = high;
   T* i = low - 1;
@@ -98,36 +118,10 @@ void QuickSort(T* low, T* high, TCompare comp) {
       return;
     }*/
 
-    T* pi = LomutoPartition(low, high, comp);
+    T* pi = HoarePartition(low, high, comp);
 
     QuickSort(low, pi - 1, comp);
     QuickSort(pi + 1, high, comp);
-  }
-}
-
-int partition(int array[], int low, int high) {
-  int pivot = array[high];
-  int i = (low - 1);
-
-  for (int j = low; j < high; j++) {
-    if (array[j] <= pivot) {
-      i++;
-
-      std::swap(array[i], array[j]);
-    }
-  }
-
-  std::swap(array[i + 1], array[high]);
-
-  return (i + 1);
-}
-
-void quickSort(int array[], int low, int high) {
-  if (low < high) {
-    int pi = partition(array, low, high);
-
-    quickSort(array, low, pi - 1);
-    quickSort(array, pi + 1, high);
   }
 }
 
