@@ -69,6 +69,26 @@ TEST(QuickSort, Sorts_Correctly) {
   }
 
   QuickSort(ptr, ptr + size - 1,
+                   [](const int& a, const int& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
+TEST(TweakedQuickSort, Sorts_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 100000;
+  int* ptr = new int[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = gen();
+  }
+
+  TweakedQuickSort(ptr, ptr + size - 1,
                 [](const int& a, const int& b) { return a < b; });
   i = 0;
   for (; i < size - 1; ++i) {
