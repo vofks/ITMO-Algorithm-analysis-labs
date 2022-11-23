@@ -50,52 +50,45 @@ void InsertionSort(T* start, T* end, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
-T* Partition(T* start, T* end, TCompare comp) {
-  T pivot = std::move(Median(*start, *(start + (end - start) / 2), *end, comp));
+T* Partition(T* low, T* high, TCompare comp) {
+  T* middle = low + (high - low) / 2;
 
-  T* i = start;
-  T* j = end - 1;
+  if (comp(*high, *low)) std::swap(*high, *low);
+  if (comp(*middle, *low)) std::swap(*middle, *low);
+  if (comp(*high, *middle)) std::swap(*high, *middle);
 
-  while (i < j) {
-    while (comp(*i, pivot)) ++i;
-    while (comp(pivot, *j)) --j;
+  std::swap(*middle, *(high - 1));
+  T pivot = *(high - 1);
+
+  T* i = low - 1;
+  T* j = high + 1;
+
+  while (true) {
+    while (comp(*(++i), pivot))
+      ;
+    while (comp(pivot, *(--j)))
+      ;
+
+    if (i >= j) {
+      return j;
+    }
+
+    std::swap(*i, *j);
   }
 }
 
 template <typename T, typename TCompare>
-void QuickSort(T* start, T* end, TCompare comp) {
-  if (start < end) {
-    if (end - start < kLengthThreshold) {
-      InsertionSort(start, end, comp);
-
+void QuickSort(T* low, T* high, TCompare comp) {
+  if (low < high) {
+    if (high - low < kLengthThreshold) {
+      InsertionSort(low, high, comp);
       return;
     }
 
-    T pivot =
-        std::move(Median(*start, *(start + (end - start) / 2), *end, comp));
+    T* pi = Partition(low, high, comp);
 
-    T* i = start;
-    T* j = end;
-
-    while (i < j) {
-      while (comp(*i, pivot)) ++i;
-      while (comp(pivot, *j)) --j;
-
-      if (*i != *j) {
-        std::swap(*i, *j);
-      }
-
-      ++i;
-      --j;
-
-      if (end - j > j - start) {
-        QuickSort(start, j, comp);
-        start = j + 1;
-      } else {
-        QuickSort(j + 1, end, comp);
-        end = j;
-      }
-    }
+    QuickSort(low, pi - 1, comp);
+    QuickSort(pi + 1, high, comp);
   }
 }
 
