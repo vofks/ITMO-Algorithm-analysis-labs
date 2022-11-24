@@ -2,7 +2,7 @@
 
 #include <utility>
 
-const int kLengthThreshold = 4;
+const int kLengthThreshold = 18;
 
 template <typename T>
 inline void PrintArray(T* ptr, int size) {
@@ -84,17 +84,42 @@ inline T* LomutoPartition(T* low, T* high, TCompare comp) {
 }
 
 template <typename T, typename TCompare>
-void QuickSort(T* low, T* high, TCompare comp) {
+void QuickSortL(T* low, T* high, TCompare comp) {
   if (low < high) {
     T* pi = LomutoPartition(low, high, comp);
 
-    QuickSort(low, pi - 1, comp);
-    QuickSort(pi + 1, high, comp);
+    QuickSortL(low, pi - 1, comp);
+    QuickSortL(pi + 1, high, comp);
+  }
+}
+
+template <typename T, typename TCompare>
+void QuickSortH(T* low, T* high, TCompare comp) {
+  if (low < high) {
+    T* pi = HoarePartition(low, high, comp);
+
+    QuickSortH(low, pi, comp);
+    QuickSortH(pi + 1, high, comp);
   }
 }
 
 template <typename T, typename TCompare>
 void TweakedQuickSort(T* low, T* high, TCompare comp) {
+  while (low < high) {
+    T* pi = HoarePartition(low, high, comp);
+
+    if (high - pi > pi - low) {
+      TweakedQuickSort(low, pi, comp);
+      low = pi + 1;
+    } else {
+      TweakedQuickSort(pi + 1, high, comp);
+      high = pi;
+    }
+  }
+}
+
+template <typename T, typename TCompare>
+void HybridTweakedQuickSort(T* low, T* high, TCompare comp) {
   while (low < high) {
     if (high - low < kLengthThreshold) {
       InsertionSort(low, high, comp);
@@ -104,10 +129,10 @@ void TweakedQuickSort(T* low, T* high, TCompare comp) {
     T* pi = HoarePartition(low, high, comp);
 
     if (high - pi > pi - low) {
-      TweakedQuickSort(low, pi, comp);
+      HybridTweakedQuickSort(low, pi, comp);
       low = pi + 1;
     } else {
-      TweakedQuickSort(pi + 1, high, comp);
+      HybridTweakedQuickSort(pi + 1, high, comp);
       high = pi;
     }
   }
