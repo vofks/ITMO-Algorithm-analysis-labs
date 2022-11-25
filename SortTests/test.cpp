@@ -1,9 +1,9 @@
 #include "pch.h"
 
 #include <random>
+#include <string>
 
 #include "../Sort/Sort.hpp"
-
 
 TEST(Median, Median_Performs_Correct_Sort) {
   int a[] = {1, 2, 3};
@@ -38,7 +38,7 @@ TEST(Median, Median_Performs_Correct_Sort) {
   ASSERT_EQ(e[3], 4);
 }
 
-TEST(InsertionSort, Sorts_Correctly) {
+TEST(InsertionSort, Sorts_Ints_Correctly) {
   std::mt19937 gen(time(0));
   const int size = 100000;
   int* ptr = new int[size];
@@ -58,7 +58,28 @@ TEST(InsertionSort, Sorts_Correctly) {
   delete[] ptr;
 }
 
-TEST(QuickSortLomuto, Sorts_Correctly) {
+TEST(InsertionSort, Sorts_Strings_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 1000;
+  std::string* ptr = new std::string[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = "ffffffffffffffffffff" + std::to_string(gen());
+  }
+
+  InsertionSort(
+      ptr, ptr + size - 1,
+      [](const std::string& a, const std::string& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
+TEST(QuickSortLomuto, Sorts_Ints_Correctly) {
   std::mt19937 gen(time(0));
   const int size = 100000;
   int* ptr = new int[size];
@@ -69,7 +90,7 @@ TEST(QuickSortLomuto, Sorts_Correctly) {
   }
 
   QuickSortL(ptr, ptr + size - 1,
-                   [](const int& a, const int& b) { return a < b; });
+             [](const int& a, const int& b) { return a < b; });
   i = 0;
   for (; i < size - 1; ++i) {
     ASSERT_GE(ptr[i + 1], ptr[i]);
@@ -78,7 +99,28 @@ TEST(QuickSortLomuto, Sorts_Correctly) {
   delete[] ptr;
 }
 
-TEST(QuickSortHoare, Sorts_Correctly) {
+TEST(QuickSortLomuto, Sorts_Strings_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 1000;
+  std::string* ptr = new std::string[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = "ffffffffffffffffffff" + std::to_string(gen());
+  }
+
+  QuickSortL(
+      ptr, ptr + size - 1,
+      [](const std::string& a, const std::string& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
+TEST(QuickSortHoare, Sorts_Ints_Correctly) {
   std::mt19937 gen(time(0));
   const int size = 100000;
   int* ptr = new int[size];
@@ -98,8 +140,27 @@ TEST(QuickSortHoare, Sorts_Correctly) {
   delete[] ptr;
 }
 
+TEST(QuickSortHoare, Sorts_Strings_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 1000;
+  std::string* ptr = new std::string[size];
 
-TEST(TweakedQuickSort, Sorts_Correctly) {
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = "ffffffffffffffffffff" + std::to_string(gen());
+  }
+
+  QuickSortH(ptr, ptr + size - 1,
+             [](const std::string& a, const std::string& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
+TEST(TweakedQuickSort, Sorts_Ints_Correctly) {
   std::mt19937 gen(time(0));
   const int size = 100000;
   int* ptr = new int[size];
@@ -110,7 +171,7 @@ TEST(TweakedQuickSort, Sorts_Correctly) {
   }
 
   TweakedQuickSort(ptr, ptr + size - 1,
-                         [](const int& a, const int& b) { return a < b; });
+                   [](const int& a, const int& b) { return a < b; });
   i = 0;
   for (; i < size - 1; ++i) {
     ASSERT_GE(ptr[i + 1], ptr[i]);
@@ -119,7 +180,27 @@ TEST(TweakedQuickSort, Sorts_Correctly) {
   delete[] ptr;
 }
 
-TEST(HybridTweakedQuickSort, Sorts_Correctly) {
+TEST(TweakedQuickSort, Sorts_Strings_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 1000;
+  std::string* ptr = new std::string[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = "ffffffffffffffffffff" + std::to_string(gen());
+  }
+
+  TweakedQuickSort(ptr, ptr + size - 1,
+             [](const std::string& a, const std::string& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
+TEST(HybridTweakedQuickSort, Sorts_Ints_Correctly) {
   std::mt19937 gen(time(0));
   const int size = 100000;
   int* ptr = new int[size];
@@ -130,7 +211,7 @@ TEST(HybridTweakedQuickSort, Sorts_Correctly) {
   }
 
   HybridTweakedQuickSort(ptr, ptr + size - 1,
-                [](const int& a, const int& b) { return a < b; });
+                         [](const int& a, const int& b) { return a < b; });
   i = 0;
   for (; i < size - 1; ++i) {
     ASSERT_GE(ptr[i + 1], ptr[i]);
@@ -138,3 +219,25 @@ TEST(HybridTweakedQuickSort, Sorts_Correctly) {
 
   delete[] ptr;
 }
+
+TEST(HybridTweakedQuickSort, Sorts_Strings_Correctly) {
+  std::mt19937 gen(time(0));
+  const int size = 1000;
+  std::string* ptr = new std::string[size];
+
+  int i = 0;
+  for (; i < size; ++i) {
+    ptr[i] = "ffffffffffffffffffff" + std::to_string(gen());
+  }
+
+  HybridTweakedQuickSort(
+      ptr, ptr + size - 1,
+      [](const std::string& a, const std::string& b) { return a < b; });
+  i = 0;
+  for (; i < size - 1; ++i) {
+    ASSERT_GE(ptr[i + 1], ptr[i]);
+  }
+
+  delete[] ptr;
+}
+
