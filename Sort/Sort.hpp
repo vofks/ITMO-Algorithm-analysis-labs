@@ -30,10 +30,9 @@ inline void InsertionSort(T* start, T* end, TCompare comp) {
 
   T* i = start + 1;
   T* j = nullptr;
-  T key(*i);
 
   for (; i <= end; ++i) {
-    key = *i;
+    T key = std::move(*i);
     j = i;
 
     while (j > start && comp(key, *(j - 1))) {
@@ -108,7 +107,7 @@ void TweakedQuickSort(T* low, T* high, TCompare comp) {
   while (low < high) {
     T* pi = HoarePartition(low, high, comp);
 
-    if (high - pi > pi - low) {
+    if (high - pi + 1 > pi - low) {
       TweakedQuickSort(low, pi, comp);
       low = pi + 1;
     } else {
