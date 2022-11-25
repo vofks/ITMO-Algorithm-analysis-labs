@@ -207,28 +207,28 @@ TEST(ArrayList, Assignment_Operator_Creates_Array_With_Correct_Complex_Buffer) {
 
 TEST(ArrayList, Move_Assignment_Operator_Creates_Array_With_Correct_Size) {
   const int array_size = 100;
-  ArrayList<int> src;
+  ArrayList<int> src, dst;
 
   for (int i = 0; i < array_size; ++i) {
     src.Insert(i);
   }
 
   int src_size = src.Size();
-  ArrayList<int> dst = std::move(src);
+  dst = std::move(src);
 
   ASSERT_EQ(dst.Size(), src_size);
 }
 
 TEST(ArrayList, Move_Assignment_Operator_Creates_Array_With_Correct_Capacity) {
   const int array_size = 100;
-  ArrayList<int> src;
+  ArrayList<int> src, dst;
 
   for (int i = 0; i < array_size; ++i) {
     src.Insert(i);
   }
 
   int src_capacity = src.Capacity();
-  ArrayList<int> dst = std::move(src);
+  dst = std::move(src);
 
   ASSERT_EQ(dst.Capacity(), src_capacity);
 }
@@ -236,13 +236,13 @@ TEST(ArrayList, Move_Assignment_Operator_Creates_Array_With_Correct_Capacity) {
 TEST(ArrayList,
      Move_Assignment_Operator_Creates_Array_With_Correct_Primitive_Buffer) {
   const int array_size = 100;
-  ArrayList<int> src;
+  ArrayList<int> src, dst;
 
   for (int i = 0; i < array_size; ++i) {
     src.Insert(i);
   }
 
-  ArrayList<int> dst = std::move(src);
+  dst = std::move(src);
 
   for (int i = 0; i < array_size; ++i) {
     ASSERT_EQ(dst[i], i);
@@ -255,13 +255,13 @@ TEST(ArrayList,
   std::string str =
       "est ullamcorper eget nulla facilisi etiam dignissim diam quis enim "
       "lobortis scelerisque fermentum dui faucibus";
-  ArrayList<std::string> src;
+  ArrayList<std::string> src, dst;
 
   for (int i = 0; i < array_size; ++i) {
     src.Insert(str + std::to_string(i));
   }
 
-  ArrayList<std::string> dst = std::move(src);
+  dst = std::move(src);
 
   for (int i = 0; i < array_size; ++i) {
     ASSERT_EQ(dst[i], str + std::to_string(i));
