@@ -20,7 +20,6 @@ class ArrayList final {
   const T& operator[](int) const;
   T& operator[](int);
   ArrayList<T>& operator=(ArrayList<T>);
-  /*ArrayList<T>& operator=(ArrayList<T>&&);*/
 
   ~ArrayList();
 
@@ -148,23 +147,6 @@ inline ArrayList<T>& ArrayList<T>::operator=(ArrayList<T> rhs) {
   return *this;
 }
 
-// template <typename T>
-// inline ArrayList<T>& ArrayList<T>::operator=(ArrayList<T>&& rhs) {
-//   for (int i = 0; i < size_; ++i) {
-//     ptr_[i].~T();
-//   }
-//
-//   free(ptr_);
-//
-//   capacity_ = rhs.capacity_;
-//   size_ = rhs.size_;
-//   ptr_ = rhs.ptr_;
-//
-//   rhs.ptr_ = nullptr;
-//   rhs.capacity_ = 0;
-//   rhs.size_ = 0;
-// }
-
 template <typename T>
 inline ArrayList<T>::~ArrayList() {
   for (int i = 0; i < size_; ++i) {
@@ -201,10 +183,6 @@ template <typename T>
 inline int ArrayList<T>::Insert(int index, const T& value) {
   if (index < 0 || index > size_) {
     return -1;
-  }
-
-  if (index == size_) {
-    return Insert(value);
   }
 
   if (size_ + 1 > capacity_) {
