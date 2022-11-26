@@ -142,28 +142,28 @@ inline T& ArrayList<T>::operator[](int i) {
 }
 
 template <typename T>
-inline ArrayList<T>& ArrayList<T>::operator=(ArrayList<T> other) {
-  Swap(other);
+inline ArrayList<T>& ArrayList<T>::operator=(ArrayList<T> rhs) {
+  Swap(rhs);
 
   return *this;
 }
 
-//template <typename T>
-//inline ArrayList<T>& ArrayList<T>::operator=(ArrayList<T>&& rhs) {
-//  for (int i = 0; i < size_; ++i) {
-//    ptr_[i].~T();
-//  }
+// template <typename T>
+// inline ArrayList<T>& ArrayList<T>::operator=(ArrayList<T>&& rhs) {
+//   for (int i = 0; i < size_; ++i) {
+//     ptr_[i].~T();
+//   }
 //
-//  free(ptr_);
+//   free(ptr_);
 //
-//  capacity_ = rhs.capacity_;
-//  size_ = rhs.size_;
-//  ptr_ = rhs.ptr_;
+//   capacity_ = rhs.capacity_;
+//   size_ = rhs.size_;
+//   ptr_ = rhs.ptr_;
 //
-//  rhs.ptr_ = nullptr;
-//  rhs.capacity_ = 0;
-//  rhs.size_ = 0;
-//}
+//   rhs.ptr_ = nullptr;
+//   rhs.capacity_ = 0;
+//   rhs.size_ = 0;
+// }
 
 template <typename T>
 inline ArrayList<T>::~ArrayList() {
@@ -204,7 +204,7 @@ inline int ArrayList<T>::Insert(int index, const T& value) {
   }
 
   if (index == size_) {
-    Insert(value);
+    return Insert(value);
   }
 
   if (size_ + 1 > capacity_) {
