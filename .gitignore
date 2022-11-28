@@ -451,4 +451,8 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
+# Custom
+save.json
+results.csv
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,c++,cmake
