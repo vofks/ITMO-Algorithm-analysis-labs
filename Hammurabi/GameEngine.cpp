@@ -49,14 +49,19 @@ void GameEngine::MainLoop() {
 
     switch (result) {
       case kSaveAndExit: {
+        SaveState();
         std::cout << "»гра сохранена." << std::endl;
 
         return;
       }
-      default: {
+      case kAllDead:
+      case kStarvationRateExceeded: {
         GameOver(result);
 
         return;
+      }
+      default: {
+        break;
       }
     }
   }
@@ -124,7 +129,6 @@ int GameEngine::Step() {
 
   int command = AcceptIntegerInput(1, 2);
   if (command == 2) {
-    SaveState();
     return kSaveAndExit;
   }
 
@@ -234,7 +238,7 @@ void GameEngine::GameFinished() {
   if (average_death_ratio > kAverageDeathRateHeigh &&
       acres_per_person_ratio < kAcresPerPersonLow) {
     cout << "»з-за вашей некомпетентности в управлении, народ устроил "
-            "бунт, и изгнал вас их города.“еперь вы вынуждены влачить "
+            "бунт, и изгнал вас из города. “еперь вы вынуждены влачить "
             "жалкое существование в изгнании."
          << endl;
 
