@@ -2,8 +2,11 @@
 
 #define _GAMESTATE_HPP_
 
+#include <nlohmann/json.hpp>
+
 #include "./Constants.hpp"
 
+namespace hammurabi {
 struct GameState {
   unsigned int seed = 0;
   int round = 0;
@@ -18,6 +21,15 @@ struct GameState {
   double wheat_stash = kStartWheatStash;
   int acreage = kStartAcreage;
   int acre_cost = 0;
+  std::vector<int> starvation_death_per_year;
 };
 
+// Nlohmann json library built-in solution
+// https://github.com/nlohmann/json#simplify-your-life-with-macros
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(GameState, seed, round, people_dead,
+                                   people_arrived, is_plague, population,
+                                   acres_planted, wheat_harvested,
+                                   wheat_per_acre, wheat_eaten_by_rats,
+                                   wheat_stash, acreage, acre_cost);
+}  // namespace hammurabi
 #endif  // _GAMESTATE_HPP_

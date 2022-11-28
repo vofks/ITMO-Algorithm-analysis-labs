@@ -10,6 +10,7 @@ const int kStartAcreage = 1000;
 const int kStartWheatStash = 2800;
 
 // Limits
+const int kLastRoundNumber = 10;
 const int kMinAcreCost = 17;
 const int kMaxAcreCost = 26;
 const int kWheatPerPerson = 20;
@@ -31,5 +32,14 @@ const double kAverageDeathRateHeigh = 0.33;
 const int kAcresPerPersonLow = 7;
 const int kAcresPerPersonMed = 9;
 const int kAcresPerPersonHigh = 10;
+
+// Files
+const std::string kDefaultFileName = "save.json";
+
+// Game states
+const int kInProgress = 0;
+const int kSaveAndExit = 1;
+const int kStarvationRateExceeded = -1;
+const int kAllDead = -2;
 
 #endif  // _CONSTANTS_HPP_

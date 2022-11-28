@@ -2,12 +2,14 @@
 
 #define _GAMEENGINE_HPP_
 
+#include <limits>
 #include <random>
 
 #include "./Constants.hpp"
 #include "./GameState.hpp"
 
-class GameEngine {
+namespace hammurabi {
+class GameEngine final {
  public:
   GameEngine();
 
@@ -22,12 +24,14 @@ class GameEngine {
   bool CanLoadState();
   void LoadState();
   void SaveState();
-  int AcceptInput();
+  int AcceptIntegerInput(int min = 0, int max = INT_MAX);
   int GetInRangeValue(int, int);
   double GetInRangeValue(double, double);
+  bool AcceptYesNoInput();
 
   GameState state_;
   std::mt19937 gen_;
 };
+}  // namespace hammurabi
 
 #endif  // _GAMEENGINE_HPP_

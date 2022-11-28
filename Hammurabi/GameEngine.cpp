@@ -1,8 +1,15 @@
 #include "./GameEngine.hpp"
 
 #include <cmath>
+#include <fstream>
 #include <iostream>
+#include <numeric>
 #include <random>
+#include <vector>
+
+#include "./StateSerializer.hpp"
+
+using hammurabi::GameEngine;
 
 GameEngine::GameEngine() {
   auto seed = std::random_device()();
@@ -18,49 +25,47 @@ void GameEngine::MainLoop() {
   using std::cout;
   using std::endl;
 
-  bool isLoading = false;
+  bool load_game = false;
   if (CanLoadState()) {
     cout << "Обнаружена сохранённая игра, хотите продолжить?\nY - Да.\nn - Нет"
          << endl;
 
-    bool inputSuccessfull = false;
-    char input = '\0';
-    do {
-      cout << "Введите ответ: ";
-      cin >> input;
-      inputSuccessfull = input == 'Y' || input == 'n';
-
-      isLoading = inputSuccessfull && input == 'Y';
-    } while (!inputSuccessfull);
+    load_game = AcceptYesNoInput();
   };
 
-  if (isLoading) {
+  if (load_game) {
     LoadState();
   }
 
   while (true) {
     StartRound();
 
-    if (state_.round == 10) {
+    if (state_.round == kLastRoundNumber) {
       GameFinished();
       return;
     }
 
     int result = Step();
 
-    if (result != 0) {
-      GameOver(result);
-      return;
+    switch (result) {
+      case kSaveAndExit: {
+        std::cout << "Игра сохранена." << std::endl;
+
+        return;
+      }
+      default: {
+        GameOver(result);
+
+        return;
+      }
     }
   }
 }
 
 void GameEngine::StartRound() {
   state_.acre_cost = GetInRangeValue(kMinAcreCost, kMaxAcreCost);
-  ShowRoundInfo();
 
-  if (state_.round == 10) {
-  }
+  ShowRoundInfo();
 }
 
 void GameEngine::ShowRoundInfo() {
@@ -114,19 +119,27 @@ int GameEngine::Step() {
   bool success = true;
 
   cout << "Что пожелаешь, повелитель?" << endl;
+  cout << "1 - Продолжить" << endl;
+  cout << "2 - Сохранить и выйти" << endl;
+
+  int command = AcceptIntegerInput(1, 2);
+  if (command == 2) {
+    SaveState();
+    return kSaveAndExit;
+  }
 
   do {
     cout << "Сколько акров земли повелеваешь купить?" << endl;
-    acres_to_buy = AcceptInput();
+    acres_to_buy = AcceptIntegerInput();
 
     cout << "Сколько акров земли повелеваешь продать?" << endl;
-    acres_to_sell = AcceptInput();
+    acres_to_sell = AcceptIntegerInput();
 
     cout << "Сколько бушелей пшеницы повелеваешь съесть?" << endl;
-    wheat_to_eat = AcceptInput();
+    wheat_to_eat = AcceptIntegerInput();
 
     cout << "Сколько акров земли повелеваешь засеять?" << endl;
-    acres_to_plant = AcceptInput();
+    acres_to_plant = AcceptIntegerInput();
 
     int acre_cost = state_.acre_cost;
     wheat_to_spend = acres_to_buy * acre_cost - acres_to_sell * acre_cost +
@@ -163,14 +176,15 @@ int GameEngine::Step() {
 
   int death_count = state_.population - wheat_to_eat / kWheatPerPerson;
   if (death_count > state_.population * kMaxDeathRateRatio) {
-    return -1;
+    return kStarvationRateExceeded;
   }
 
   if (death_count == state_.population) {
-    return -2;
+    return kAllDead;
   }
 
   state_.people_dead = death_count;
+  state_.starvation_death_per_year.push_back(death_count);
   state_.population -= death_count;
 
   int people_arrived = death_count / 2 +
@@ -188,30 +202,34 @@ int GameEngine::Step() {
 
   state_.round += 1;
 
-  return 0;
+  return kInProgress;
 }
 
 void GameEngine::GameOver(int result) {
   using std::cout;
   using std::endl;
 
-  // TODO: add constants
-  if (result == -1)
+  if (result == kStarvationRateExceeded)
     cout << "Из-за вашей некомпетентности в управлении, более 45% населения "
             "умерли от голода. Народ устроил бунт и изгнал вас из города."
          << endl;
 
-  if (result == 2)
+  if (result == kAllDead)
     cout << "Все умерли, вам больше некем править. Город опустел и пришёл в "
             "упадок. Совесть будет мучать вас до самой смерти."
          << endl;
 }
 void GameEngine::GameFinished() {
+  using std::accumulate;
   using std::cout;
   using std::endl;
 
   int acres_per_person_ratio = state_.population / state_.acreage;
-  double average_death_ratio = 0.0;  // TODO: Add death ratio calculation
+
+  const std::vector<int>& stats = state_.starvation_death_per_year;
+
+  double average_death_ratio =
+      accumulate(stats.begin(), stats.end(), 0) / stats.size();
 
   if (average_death_ratio > kAverageDeathRateHeigh &&
       acres_per_person_ratio < kAcresPerPersonLow) {
@@ -247,26 +265,21 @@ void GameEngine::GameFinished() {
 }
 
 bool GameEngine::CanLoadState() {
-  // TODO: Add save check logic
-  return false;
+  // NOTE: Unstable solution.
+  return (std::ifstream(kDefaultFileName)).good();
 }
 
-void GameEngine::LoadState() {
-  std::cout << "Игра успешно загружена." << std::endl;
-  // TODO: Add load logic
-}
+void GameEngine::LoadState() { state_ = serializer::DeserializeState(); }
 
-void GameEngine::SaveState() {
-  // TODO: Add save logic;
-}
+void GameEngine::SaveState() { serializer::SerializeState(state_); }
 
-int GameEngine::AcceptInput() {
+int GameEngine::AcceptIntegerInput(int min, int max) {
   using std::cin;
 
   int value = -1;
   do {
     cin >> value;
-  } while (!(value >= 0));
+  } while (!(value >= min && value <= max));
 
   return value;
 }
@@ -277,4 +290,20 @@ int GameEngine::GetInRangeValue(int low, int high) {
 
 double GameEngine::GetInRangeValue(double low, double high) {
   return std::uniform_real_distribution<>(low, high)(gen_);
+}
+
+bool GameEngine::AcceptYesNoInput() {
+  using std::cin;
+  using std::cout;
+  using std::endl;
+
+  bool inputSuccessfull = false;
+  char input = '\0';
+  do {
+    cout << "Введите ответ: ";
+    cin >> input;
+    inputSuccessfull = input == 'Y' || input == 'n';
+  } while (!inputSuccessfull);
+
+  return input == 'Y';
 }
