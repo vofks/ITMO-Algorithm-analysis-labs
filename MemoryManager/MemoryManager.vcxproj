@@ -127,11 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MemoryAllocator.cpp" />
+    <ClCompile Include="CoalesceAllocator.cpp" />
+    <ClCompile Include="FixedAllocator.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MemoryAllocator.hpp" />
+    <ClInclude Include="CoalesceAllocator.hpp" />
+    <ClInclude Include="FixedAllocator.hpp" />
+    <ClInclude Include="MemoryManager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
