@@ -5,9 +5,18 @@ namespace memory_manager {
 class FixedAllocator final {
  public:
   FixedAllocator(int block_size);
+  virtual ~FixedAllocator();
 
-  void* Alloc(size_t size);
-  void Free(void* p);
+  virtual void Init();
+  virtual void Destroy();
+  virtual void* Alloc(size_t size);
+  virtual void Free(void* p);
+
+#ifdef _DEBUG
+  virtual void DumpStat() const;
+  virtual void DumpBlocks() const;
+#endif  // _DEBUG
+
  private:
 };
 }  // namespace memory_manager
