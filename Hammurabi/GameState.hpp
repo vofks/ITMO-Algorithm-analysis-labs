@@ -17,11 +17,11 @@ struct GameState {
   int acres_planted = 0;
   int wheat_harvested = 0;
   int wheat_per_acre = 0;
-  double wheat_eaten_by_rats = 0;
-  double wheat_stash = kStartWheatStash;
+  int wheat_eaten_by_rats = 0;
+  int wheat_stash = kStartWheatStash;
   int acreage = kStartAcreage;
   int acre_cost = 0;
-  std::vector<int> starvation_death_per_year;
+  int cumulative_starvation_death_per_year = 0;
 };
 
 // Nlohmann json library built-in solution

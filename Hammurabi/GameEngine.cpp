@@ -120,7 +120,7 @@ int GameEngine::Step() {
   int wheat_to_eat = 0;
   int acres_to_plant = 0;
   int new_acreage = 0;
-  double wheat_to_spend = 0;
+  int wheat_to_spend = 0;
   bool success = true;
 
   cout << "Что пожелаешь, повелитель?" << endl;
@@ -173,7 +173,7 @@ int GameEngine::Step() {
   state_.wheat_harvested = wheat_harvested;
   state_.wheat_stash += wheat_harvested;
 
-  double rat_eaten =
+  int rat_eaten =
       state_.wheat_stash * GetInRangeValue(kMinRatRatio, kMaxRatRatio);
   state_.wheat_eaten_by_rats = rat_eaten;
   state_.wheat_stash -= rat_eaten;
@@ -188,7 +188,7 @@ int GameEngine::Step() {
   }
 
   state_.people_dead = death_count;
-  state_.starvation_death_per_year.push_back(death_count);
+  state_.cumulative_starvation_death_per_year += death_count;
   state_.population -= death_count;
 
   int people_arrived = death_count / 2 +
@@ -230,10 +230,8 @@ void GameEngine::GameFinished() {
 
   int acres_per_person_ratio = state_.population / state_.acreage;
 
-  const std::vector<int>& stats = state_.starvation_death_per_year;
-
   double average_death_ratio =
-      accumulate(stats.begin(), stats.end(), 0) / stats.size();
+      double(state_.cumulative_starvation_death_per_year) / state_.round;
 
   if (average_death_ratio > kAverageDeathRateHeigh &&
       acres_per_person_ratio < kAcresPerPersonLow) {
