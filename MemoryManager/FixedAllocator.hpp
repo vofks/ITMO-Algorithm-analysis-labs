@@ -2,6 +2,8 @@
 #define _FIXED_ALLOCATOR_HPP_
 
 namespace memory_manager {
+const int kFullFreeList = -1;
+
 class FixedAllocator final {
  public:
   FixedAllocator(int block_size, int num_blocks);
@@ -21,6 +23,7 @@ class FixedAllocator final {
   struct PageHeader {
     PageHeader* next;
     void* data;
+    int free_list_head_;
     int free_block_count;
   };
 
@@ -28,7 +31,7 @@ class FixedAllocator final {
   int num_blocks_;
   void* data_;
 
-  void* AllocPage();
+  PageHeader* AllocPage();
   void FreePage(PageHeader*& page);
   void FreePages();
 };
