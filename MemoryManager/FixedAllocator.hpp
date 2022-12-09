@@ -4,7 +4,7 @@
 namespace memory_manager {
 class FixedAllocator final {
  public:
-  FixedAllocator(int block_size);
+  FixedAllocator(int block_size, int num_blocks);
   virtual ~FixedAllocator();
 
   virtual void Init();
@@ -18,6 +18,19 @@ class FixedAllocator final {
 #endif  // _DEBUG
 
  private:
+  struct PageHeader {
+    PageHeader* next;
+    void* data;
+    int free_block_count;
+  };
+
+  int block_size_;
+  int num_blocks_;
+  void* data_;
+
+  void* AllocPage();
+  void FreePage(PageHeader*& page);
+  void FreePages();
 };
 }  // namespace memory_manager
 

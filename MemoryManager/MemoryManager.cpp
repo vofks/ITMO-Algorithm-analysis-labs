@@ -76,7 +76,11 @@ void MemoryManager::Free(void* ptr) {
 
   if (success) {
     os_allocs_.erase(std::find(os_allocs_.begin(), os_allocs_.end(), ptr));
+
+    return;
   }
+
+  // TODO: установить принадлежность указателя аллокатору
 }
 
 #ifdef _DEBUG
