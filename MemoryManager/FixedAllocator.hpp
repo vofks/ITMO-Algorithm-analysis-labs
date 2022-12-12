@@ -1,12 +1,14 @@
 #ifndef _FIXED_ALLOCATOR_HPP_
 #define _FIXED_ALLOCATOR_HPP_
 
+#include "./Constants.hpp"
+
 namespace memory_manager {
 const int kFullFreeList = -1;
 
 class FixedAllocator final {
  public:
-  FixedAllocator(int block_size, int num_blocks);
+  FixedAllocator(int blockSize, int pageSize = kMegabyte);
   virtual ~FixedAllocator();
 
   virtual void Init();
@@ -20,20 +22,9 @@ class FixedAllocator final {
 #endif  // _DEBUG
 
  private:
-  struct PageHeader {
-    PageHeader* next;
-    void* data;
-    int free_list_head_;
-    int free_block_count;
-  };
-
-  int block_size_;
-  int num_blocks_;
+  int blockSize_;
+  int pageSize_;
   void* data_;
-
-  PageHeader* AllocPage();
-  void FreePage(PageHeader*& page);
-  void FreePages();
 };
 }  // namespace memory_manager
 
