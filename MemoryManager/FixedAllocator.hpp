@@ -4,17 +4,16 @@
 #include "./Constants.hpp"
 
 namespace memory_manager {
-const int kFullFreeList = -1;
 
 class FixedAllocator final {
  public:
-  FixedAllocator(int blockSize, int pageSize = kMegabyte);
+  explicit FixedAllocator(int blockSize, int pageSize = kMegabyte);
   virtual ~FixedAllocator();
 
   virtual void Init();
   virtual void Destroy();
   virtual void* Alloc(size_t size);
-  virtual void Free(void* p);
+  virtual bool Free(void* p);
 
 #ifdef _DEBUG
   virtual void DumpStat() const;
@@ -22,9 +21,25 @@ class FixedAllocator final {
 #endif  // _DEBUG
 
  private:
+  struct PageHeader {
+    PageHeader* next = nullptr;
+    int freeBlockCount = 0;
+    int freeListHead = 0;
+    void* data = nullptr;
+  };
+
   int blockSize_;
   int pageSize_;
-  void* data_;
+  void* ptr_;
+
+#ifdef _DEBUG
+  bool isInitialized_ = false;
+  bool isDestroyed_ = false;
+#endif  // _DEBUG
+
+  void* AddPage();
+  void FreePage(void* ptr);
+  void FreePages();
 };
 }  // namespace memory_manager
 
