@@ -8,21 +8,26 @@
 
 using memory_manager::CoalesceAllocator;
 
-CoalesceAllocator::CoalesceAllocator() {}
+CoalesceAllocator::CoalesceAllocator() : ptr_(nullptr) {}
 
 CoalesceAllocator::~CoalesceAllocator() { Allocator::~Allocator(); }
 
-void CoalesceAllocator::Init() { Allocator::Init(); }
+void CoalesceAllocator::Init() {
+  Allocator::Init();
+  ptr_ = VirtualAlloc(nullptr, kMegabyte, MEM_RESERVE | MEM_COMMIT,
+                      PAGE_READWRITE);
+}
 
 void CoalesceAllocator::Destroy() { Allocator::Destroy(); }
 
 void* CoalesceAllocator::Alloc(size_t size) {
   Allocator::Alloc(size);
+
   return nullptr;
 }
 
-bool CoalesceAllocator::Free(void* p) {
-  Allocator::Free(p);
+bool CoalesceAllocator::Free(void* ptr) {
+  Allocator::Free(ptr);
   return false;
 }
 

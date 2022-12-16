@@ -52,8 +52,8 @@ void* FixedAllocator::Alloc(size_t size) {
   return (void*)emptyBlock;
 }
 
-bool FixedAllocator::Free(void* p) {
-  Allocator::Free(p);
+bool FixedAllocator::Free(void* ptr) {
+  Allocator::Free(ptr);
 
   PageHeader* page = (PageHeader*)ptr_;
   PageHeader* previousPage = nullptr;
@@ -63,15 +63,15 @@ bool FixedAllocator::Free(void* p) {
 #endif  // _DEBUG
 
   while (page) {
-    if (!page->IsValidBlock(p)) {
+    if (!page->IsValidBlock(ptr)) {
       previousPage = page;
       page = page->next_;
 
       continue;
     }
 
-    *(int*)p = page->freeListHead_;
-    page->freeListHead_ = page->GetBlockIndex(p);
+    *(int*)ptr = page->freeListHead_;
+    page->freeListHead_ = page->GetBlockIndex(ptr);
     ++page->freeBlockCount_;
 
     if (page->IsEmpty() && previousPage) {

@@ -36,7 +36,7 @@ void* Allocator::Alloc(size_t size) {
   return nullptr;
 }
 
-bool Allocator::Free(void* p) {
+bool Allocator::Free(void* ptr) {
 #ifdef _DEBUG
   assert(isInitialized_ &&
          "Allocator must be initialized with Init() before being used.");

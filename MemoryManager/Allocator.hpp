@@ -7,7 +7,7 @@ class Allocator {
   virtual void Init();
   virtual void Destroy();
   virtual void* Alloc(size_t size);
-  virtual bool Free(void* p);
+  virtual bool Free(void* ptr);
 
 #ifdef _DEBUG
   virtual void DumpStat() const = 0;
