@@ -10,18 +10,24 @@ using memory_manager::CoalesceAllocator;
 
 CoalesceAllocator::CoalesceAllocator() {}
 
-memory_manager::CoalesceAllocator::~CoalesceAllocator() {}
+CoalesceAllocator::~CoalesceAllocator() { Allocator::~Allocator(); }
 
-void memory_manager::CoalesceAllocator::Init() {}
+void CoalesceAllocator::Init() { Allocator::Init(); }
 
-void memory_manager::CoalesceAllocator::Destroy() {}
+void CoalesceAllocator::Destroy() { Allocator::Destroy(); }
 
-void* CoalesceAllocator::Alloc(size_t size) { return nullptr; }
+void* CoalesceAllocator::Alloc(size_t size) {
+  Allocator::Alloc(size);
+  return nullptr;
+}
 
-void CoalesceAllocator::Free(void* p) {}
+bool CoalesceAllocator::Free(void* p) {
+  Allocator::Free(p);
+  return false;
+}
 
 #ifdef _DEBUG
-void memory_manager::CoalesceAllocator::DumpStat() const {}
+void CoalesceAllocator::DumpStat() const {}
 
-void memory_manager::CoalesceAllocator::DumpBlocks() const {}
+void CoalesceAllocator::DumpBlocks() const {}
 #endif  // _DEBUG

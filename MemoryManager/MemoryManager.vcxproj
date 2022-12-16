@@ -127,12 +127,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="CoalesceAllocator.cpp" />
     <ClCompile Include="FixedAllocator.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Allocator.hpp" />
     <ClInclude Include="CoalesceAllocator.hpp" />
     <ClInclude Include="Constants.hpp" />
     <ClInclude Include="FixedAllocator.hpp" />

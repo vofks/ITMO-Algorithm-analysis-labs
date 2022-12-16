@@ -1,8 +1,10 @@
 #ifndef _COALESCE_ALLOCATOR_HPP_
 #define _COALESCE_ALLOCATOR_HPP_
 
+#include "./Allocator.hpp"
+
 namespace memory_manager {
-class CoalesceAllocator final {
+class CoalesceAllocator final : public Allocator {
  public:
   CoalesceAllocator();
   virtual ~CoalesceAllocator();
@@ -10,7 +12,7 @@ class CoalesceAllocator final {
   virtual void Init();
   virtual void Destroy();
   virtual void* Alloc(size_t size);
-  virtual void Free(void* p);
+  virtual bool Free(void* p);
 
 #ifdef _DEBUG
   virtual void DumpStat() const;

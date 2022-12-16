@@ -3,11 +3,12 @@
 
 #include <cstring>
 
+#include "./Allocator.hpp"
 #include "./Constants.hpp"
 
 namespace memory_manager {
 
-class FixedAllocator final {
+class FixedAllocator final : public Allocator {
  public:
   explicit FixedAllocator(int blockSize, int pageSize = kMegabyte);
   virtual ~FixedAllocator();
