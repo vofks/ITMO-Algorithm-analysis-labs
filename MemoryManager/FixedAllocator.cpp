@@ -41,32 +41,34 @@ void FixedAllocator::Destroy() {
 }
 
 void* FixedAllocator::Alloc(size_t size) {
+  // TODO: add integrity check
 #ifdef _DEBUG
-  assert(size <= blockSize_ &&
-         "Allocator is too small. Consider using a wider block.");
   assert(isInitialized_ &&
          "Allocator must be initialized with Init() before being used.");
   assert(!isDestroyed_ && "This allocator has already been destroyed.");
 #endif  // _DEBUG
 
-  PageHeader* header = (PageHeader*)ptr_;
+  PageHeader* page = (PageHeader*)ptr_;
 
-  while (header->freeListHead == kFullPage) {
-    if (header->next == nullptr) {
-      header->next = (PageHeader*)AddPage();
+#ifdef _DEBUG
+  assert(page->IsCorrupt() && "Integrity check failed.");
+#endif _DEBUG
+
+  while (page->IsFull()) {
+    if (!page->HasNextPage()) {
+      page->next_ = (PageHeader*)AddPage();
     }
 
-    header = header->next;
+    page = page->next_;
   }
 
-  int freeBlockIndex = header->freeListHead;
-  byte* freeBlock = (byte*)header->data + freeBlockIndex * blockSize_;
-  int nextFreeBlockIndex = *(int*)freeBlock;
+  byte* emptyBlock = page->GetEmptyBlock();
+  int nextFreeBlockIndex = *(int*)emptyBlock;
 
-  --header->freeBlockCount;
-  header->freeListHead = nextFreeBlockIndex;
+  --page->freeBlockCount_;
+  page->freeListHead_ = nextFreeBlockIndex;
 
-  return (void*)freeBlock;
+  return (void*)emptyBlock;
 }
 
 bool FixedAllocator::Free(void* p) {
@@ -76,32 +78,31 @@ bool FixedAllocator::Free(void* p) {
   assert(!isDestroyed_ && "This allocator has already been destroyed.");
 #endif  // _DEBUG
 
-  PageHeader* header = (PageHeader*)ptr_;
-  PageHeader* previousHeader = nullptr;
+  PageHeader* page = (PageHeader*)ptr_;
+  PageHeader* previousPage = nullptr;
 
-  while (header) {
-    if (p >= header->data && p <= (byte*)header + pageSize_) {
-      if (((byte*)p - (byte*)header->data) % blockSize_ != 0) {
-        return false;
-      }
+#ifdef _DEBUG
+  assert(page->IsCorrupt() && "Integrity check failed.");
+#endif  // _DEBUG
 
-      *(int*)p = header->freeListHead;
-      header->freeListHead = ((byte*)p - (byte*)header->data) / blockSize_;
-      ++header->freeBlockCount;
+  while (page) {
+    if (!page->IsValidBlock(p)) {
+      previousPage = page;
+      page = page->next_;
 
-      // Delete empty page
-      if (header->freeBlockCount ==
-              (pageSize_ - sizeof(PageHeader)) / blockSize_ &&
-          previousHeader) {
-        previousHeader->next = header->next;
-        FreePage(header);
-      }
-
-      return true;
+      continue;
     }
 
-    previousHeader = header;
-    header = header->next;
+    *(int*)p = page->freeListHead_;
+    page->freeListHead_ = page->GetBlockIndex(p);
+    ++page->freeBlockCount_;
+
+    if (page->IsEmpty() && previousPage) {
+      previousPage->next_ = page->next_;
+      FreePage(page);
+    }
+
+    return true;
   }
 
   return false;
@@ -126,22 +127,22 @@ void FixedAllocator::DumpBlocks() const {
 #endif  //  _DEBUG
 
 void* FixedAllocator::AddPage() {
+#ifdef _DEBUG
+  void* ptr = VirtualAlloc(nullptr, pageSize_ * 3, MEM_RESERVE | MEM_COMMIT,
+                           PAGE_READWRITE);
+#else
   void* ptr = VirtualAlloc(nullptr, pageSize_, MEM_RESERVE | MEM_COMMIT,
                            PAGE_READWRITE);
+#endif
 
-  PageHeader* header = (PageHeader*)ptr;
-  header->freeBlockCount = (pageSize_ - sizeof(PageHeader)) / blockSize_;
-  header->data = (byte*)ptr + sizeof(PageHeader);
+  PageHeader* page = (PageHeader*)ptr;
 
-  // TODO: add debug flags
+  page->freeBlockCount_ = (pageSize_ - sizeof(PageHeader)) / blockSize_;
+  page->data_ = (byte*)ptr + sizeof(PageHeader);
+  page->blockSize_ = blockSize_;
+  page->pageSize_ = pageSize_;
 
-  for (int i = 0; i < header->freeBlockCount - 1; ++i) {
-    *(int*)((byte*)header->data + i * blockSize_) = i + 1;
-  }
-
-  // TODO: refactor && cleanup
-  *(int*)((byte*)header->data + (header->freeBlockCount - 1) * blockSize_) =
-      kFullPage;
+  page->InitFreeList();
 
   return ptr;
 }
@@ -149,22 +150,20 @@ void* FixedAllocator::AddPage() {
 void FixedAllocator::FreePage(void* ptr) { VirtualFree(ptr, 0, MEM_RELEASE); }
 
 void memory_manager::FixedAllocator::FreePages() {
-  PageHeader* header = (PageHeader*)ptr_;
-  PageHeader* nextHeader = nullptr;
+  PageHeader* page = (PageHeader*)ptr_;
+  PageHeader* nextPage = nullptr;
 
 #ifdef _DEBUG
-  bool isEmptyPage =
-      header->freeBlockCount == (pageSize_ - sizeof(PageHeader)) / blockSize_;
-  assert(!header->next && isEmptyPage &&
+  assert(!page->HasNextPage() && page->IsEmpty() &&
          "Memory leak. All acquired blocks must be freed before calling "
          "Destroy().");
 #endif
 
-  while (header) {
-    nextHeader = header->next;
+  while (page) {
+    nextPage = page->next_;
 
-    FreePage((void*)header);
+    FreePage((void*)page);
 
-    header = nextHeader;
+    page = nextPage;
   }
 }

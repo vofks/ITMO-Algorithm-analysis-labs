@@ -6,10 +6,11 @@
 namespace memory_manager {
 typedef int8_t byte;
 
+const char* const kDebugFlag = "BADCAFE";
+
 const int kFullPage = -1;
 
 const int kFSACount = 6;
-const int kReservedPageCount = 4;
 
 const int k16Bytes = 1 << 4;
 const int k32Bytes = k16Bytes << 1;
