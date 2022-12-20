@@ -130,6 +130,7 @@
     <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="CoalesceAllocator.cpp" />
     <ClCompile Include="FixedAllocator.cpp" />
+    <ClCompile Include="HugeAllocator.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -138,6 +139,7 @@
     <ClInclude Include="CoalesceAllocator.hpp" />
     <ClInclude Include="Constants.hpp" />
     <ClInclude Include="FixedAllocator.hpp" />
+    <ClInclude Include="HugeAllocator.hpp" />
     <ClInclude Include="MemoryManager.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

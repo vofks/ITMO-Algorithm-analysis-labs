@@ -13,7 +13,7 @@ class Allocator {
   virtual void DumpStat() const = 0;
   virtual void DumpBlocks() const = 0;
 #endif  // _DEBUG
- private:
+ protected:
 #ifdef _DEBUG
   bool isInitialized_ = false;
   bool isDestroyed_ = false;

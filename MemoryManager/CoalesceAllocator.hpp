@@ -8,16 +8,16 @@ namespace memory_manager {
 class CoalesceAllocator final : public Allocator {
  public:
   CoalesceAllocator();
-  virtual ~CoalesceAllocator();
+  ~CoalesceAllocator() override;
 
-  virtual void Init();
-  virtual void Destroy();
-  virtual void* Alloc(size_t size);
-  virtual bool Free(void* ptr);
+  void Init() override;
+  void Destroy() override;
+  void* Alloc(size_t size) override;
+  bool Free(void* ptr) override;
 
 #ifdef _DEBUG
-  virtual void DumpStat() const;
-  virtual void DumpBlocks() const;
+  void DumpStat() const override;
+  void DumpBlocks() const override;
 #endif  // _DEBUG
 
  private:
@@ -74,8 +74,6 @@ class CoalesceAllocator final : public Allocator {
     }
   };
 
-  void* ptr_;
-
   void* AddPage();
   void FreePage(void* ptr);
   void FreePages();
@@ -84,6 +82,8 @@ class CoalesceAllocator final : public Allocator {
   void RemoveFreeBlock(BlockHeader* block);
   BlockHeader* FindFreeBlock(int size);
   void Coalesce(BlockHeader* block);
+
+  void* ptr_;
 };
 
 }  // namespace memory_manager

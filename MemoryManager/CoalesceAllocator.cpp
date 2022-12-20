@@ -81,9 +81,17 @@ bool CoalesceAllocator::Free(void* ptr) {
 }
 
 #ifdef _DEBUG
-void CoalesceAllocator::DumpStat() const {}
+void CoalesceAllocator::DumpStat() const {
+  assert(isInitialized_ &&
+         "Allocator must be initialized with Init() before being used.");
+  assert(!isDestroyed_ && "This allocator has already been destroyed.");
+}
 
-void CoalesceAllocator::DumpBlocks() const {}
+void CoalesceAllocator::DumpBlocks() const {
+  assert(isInitialized_ &&
+         "Allocator must be initialized with Init() before being used.");
+  assert(!isDestroyed_ && "This allocator has already been destroyed.");
+}
 #endif  // _DEBUG
 
 void* CoalesceAllocator::AddPage() {

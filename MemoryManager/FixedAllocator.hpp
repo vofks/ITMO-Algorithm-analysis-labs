@@ -11,16 +11,16 @@ namespace memory_manager {
 class FixedAllocator final : public Allocator {
  public:
   explicit FixedAllocator(int blockSize, int pageSize = kMegabyte);
-  virtual ~FixedAllocator();
+  ~FixedAllocator() override;
 
-  virtual void Init();
-  virtual void Destroy();
-  virtual void* Alloc(size_t size);
-  virtual bool Free(void* ptr);
+  void Init() override;
+  void Destroy() override;
+  void* Alloc(size_t size) override;
+  bool Free(void* ptr) override;
 
 #ifdef _DEBUG
-  virtual void DumpStat() const;
-  virtual void DumpBlocks() const;
+  void DumpStat() const override;
+  void DumpBlocks() const override;
 #endif  // _DEBUG
 
  private:
@@ -105,18 +105,13 @@ class FixedAllocator final : public Allocator {
 #endif
   };
 
-  int blockSize_;
-  int pageSize_;
-  void* ptr_;
-
-#ifdef _DEBUG
-  bool isInitialized_ = false;
-  bool isDestroyed_ = false;
-#endif  // _DEBUG
-
   void* AddPage();
   void FreePage(void* ptr);
   void FreePages();
+
+  int blockSize_;
+  int pageSize_;
+  void* ptr_;
 };
 }  // namespace memory_manager
 
