@@ -95,7 +95,7 @@ void CoalesceAllocator::DumpBlocks() const {
 #endif  // _DEBUG
 
 void* CoalesceAllocator::AddPage() {
-  void* ptr = VirtualAlloc(nullptr, kMegabyte, MEM_RESERVE | MEM_COMMIT,
+  void* ptr = VirtualAlloc(nullptr, 11 * kMegabyte, MEM_RESERVE | MEM_COMMIT,
                            PAGE_READWRITE);
 
   PageHeader* page = new (ptr) PageHeader();
@@ -120,7 +120,7 @@ void CoalesceAllocator::FreePages() {
 
   // TODO: add leak check
 
-  while (page->next_) {
+  while (page) {
     nextPage = page->next_;
 
     FreePage(page);

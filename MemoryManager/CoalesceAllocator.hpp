@@ -54,7 +54,7 @@ class CoalesceAllocator final : public Allocator {
     bool HasNext() { return next_; }
 
     bool ContainsPtr(void* ptr) {
-      return ptr > ptr_ && ptr < (byte*)ptr_ + kMegabyte;
+      return ptr >= ptr_ && ptr <= (byte*)ptr_ + kMegabyte;
     }
 
     BlockHeader* GetBlock(void* ptr) {

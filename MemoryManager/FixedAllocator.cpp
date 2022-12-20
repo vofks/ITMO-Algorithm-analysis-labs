@@ -33,7 +33,7 @@ void* FixedAllocator::Alloc(size_t size) {
 
 #ifdef _DEBUG
   assert(page->IsCorrupt() && "Integrity check failed.");
-#endif _DEBUG
+#endif  // _DEBUG
 
   while (page->IsFull()) {
     if (!page->HasNextPage()) {
@@ -104,13 +104,14 @@ void FixedAllocator::DumpBlocks() const {
 #endif  //  _DEBUG
 
 void* FixedAllocator::AddPage() {
+  int size = pageSize_;
+
 #ifdef _DEBUG
-  void* ptr = VirtualAlloc(nullptr, pageSize_ * 3, MEM_RESERVE | MEM_COMMIT,
-                           PAGE_READWRITE);
-#else
-  void* ptr = VirtualAlloc(nullptr, pageSize_, MEM_RESERVE | MEM_COMMIT,
-                           PAGE_READWRITE);
-#endif
+  size *= 3;
+#endif  // _DEBUG
+
+  void* ptr =
+      VirtualAlloc(nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
   PageHeader* page = new (ptr) PageHeader();
 
@@ -134,12 +135,12 @@ void FixedAllocator::FreePages() {
   assert(!page->HasNextPage() && page->IsEmpty() &&
          "Memory leak. All acquired blocks must be freed before calling "
          "Destroy().");
-#endif
+#endif  // _DEBUG
 
   while (page) {
     nextPage = page->next_;
 
-    FreePage((void*)page);
+    FreePage(page);
 
     page = nextPage;
   }

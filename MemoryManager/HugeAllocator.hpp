@@ -23,8 +23,17 @@ class HugeAllocator final : public Allocator {
  private:
   struct PageHeader final {
     PageHeader* next_ = nullptr;
+    size_t size_ = 0;
     void* ptr_ = nullptr;
+
+    bool ContainsPtr(void* ptr) {
+      return ptr >= ptr_ && ptr <= (byte*)ptr_ + size_;
+    }
   };
+
+  void* AddPage(size_t size);
+  void FreePage(void* ptr);
+  void FreePages();
 
   void* ptr_;
 };
