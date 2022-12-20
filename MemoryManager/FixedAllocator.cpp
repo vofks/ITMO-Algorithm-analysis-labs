@@ -112,7 +112,7 @@ void* FixedAllocator::AddPage() {
                            PAGE_READWRITE);
 #endif
 
-  PageHeader* page = (PageHeader*)ptr;
+  PageHeader* page = new (ptr) PageHeader();
 
   page->freeBlockCount_ = (pageSize_ - sizeof(PageHeader)) / blockSize_;
   page->data_ = (byte*)ptr + sizeof(PageHeader);

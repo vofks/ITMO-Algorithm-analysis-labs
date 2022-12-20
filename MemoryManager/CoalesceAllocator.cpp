@@ -89,10 +89,11 @@ void CoalesceAllocator::DumpBlocks() const {}
 void* CoalesceAllocator::AddPage() {
   void* ptr = VirtualAlloc(nullptr, kMegabyte, MEM_RESERVE | MEM_COMMIT,
                            PAGE_READWRITE);
-  PageHeader* page = (PageHeader*)ptr;
+
+  PageHeader* page = new (ptr) PageHeader();
   page->ptr_ = (byte*)page + sizeof(PageHeader);
 
-  BlockHeader* block = (BlockHeader*)page->ptr_;
+  BlockHeader* block = new (page->ptr_) BlockHeader();
   block->data_ = (byte*)block + sizeof(BlockHeader);
   block->size_ = kMegabyte - sizeof(PageHeader) - sizeof(BlockHeader);
 
@@ -194,7 +195,7 @@ CoalesceAllocator::BlockHeader* CoalesceAllocator::FindFreeBlock(int size) {
   return currentBlock;
 }
 
-void memory_manager::CoalesceAllocator::Coalesce(BlockHeader* block) {
+void CoalesceAllocator::Coalesce(BlockHeader* block) {
   // Left neighbor coalesce
   if (block->IsPreviousFree()) {
     BlockHeader* previousBlock = block->previous_;
