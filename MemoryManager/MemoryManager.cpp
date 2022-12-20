@@ -11,8 +11,6 @@
 
 using memory_manager::MemoryManager;
 
-MemoryManager::MemoryManager() {}
-
 MemoryManager::~MemoryManager() {}
 
 void MemoryManager::Init() {
@@ -21,6 +19,7 @@ void MemoryManager::Init() {
   }
 
   coalesceAllocator_.Init();
+  hugeAllocator_.Init();
 }
 
 void MemoryManager::Destroy() {
@@ -29,19 +28,12 @@ void MemoryManager::Destroy() {
   }
 
   coalesceAllocator_.Destroy();
-
-  for (auto p : osAllocs_) {
-    VirtualFree(p, 0, MEM_RELEASE);
-  }
+  hugeAllocator_.Destroy();
 }
 
 void* MemoryManager::Alloc(size_t size) {
   if (size > kMinMegabytes) {
-    void* ptr =
-        VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    osAllocs_.push_back(ptr);
-
-    return ptr;
+    return hugeAllocator_.Alloc(size);
   }
 
   if (size > k512Bytes) {
@@ -72,15 +64,12 @@ void* MemoryManager::Alloc(size_t size) {
 }
 
 void MemoryManager::Free(void* ptr) {
-  bool success = VirtualFree(ptr, 0, MEM_RELEASE);
-
-  if (success) {
-    osAllocs_.erase(std::find(osAllocs_.begin(), osAllocs_.end(), ptr));
-
-    return;
+  for (int i = 0; i < 6; ++i) {
+    fixedAllocators_[i].Free(ptr);
   }
 
-  // TODO: установить принадлежность указателя аллокатору
+  coalesceAllocator_.Free(ptr);
+  hugeAllocator_.Free(ptr);
 }
 
 #ifdef _DEBUG

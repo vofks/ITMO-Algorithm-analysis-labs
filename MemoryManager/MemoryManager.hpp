@@ -6,11 +6,11 @@
 #include "./CoalesceAllocator.hpp"
 #include "./Constants.hpp"
 #include "./FixedAllocator.hpp"
+#include "./HugeAllocator.hpp"
 
 namespace memory_manager {
 class MemoryManager {
  public:
-  MemoryManager();
   virtual ~MemoryManager();
 
   virtual void Init();
@@ -28,8 +28,8 @@ class MemoryManager {
       FixedAllocator(k16Bytes),  FixedAllocator(k32Bytes),
       FixedAllocator(k64Bytes),  FixedAllocator(k128Bytes),
       FixedAllocator(k256Bytes), FixedAllocator(k512Bytes)};
-  CoalesceAllocator coalesceAllocator_;
-  std::vector<void*> osAllocs_;
+  CoalesceAllocator coalesceAllocator_ = CoalesceAllocator();
+  HugeAllocator hugeAllocator_ = HugeAllocator();
 };
 }  // namespace memory_manager
 
