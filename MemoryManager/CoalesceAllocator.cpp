@@ -29,7 +29,7 @@ void* CoalesceAllocator::Alloc(size_t size) {
 
   PageHeader* page = (PageHeader*)ptr_;
   BlockHeader* block = FindFreeBlock(size);
-  block->isEmpty_ = false;
+  block->isFree_ = false;
 
   RemoveFreeBlock(block);
 
@@ -55,8 +55,26 @@ bool CoalesceAllocator::Free(void* ptr) {
   Allocator::Free(ptr);
 
   PageHeader* page = (PageHeader*)ptr_;
-  while (page->HasNext()) {
-    if (page->ContainsPtr(ptr)) return true;
+
+  while (page) {
+    if (!page->ContainsPtr(ptr)) {
+      page = page->next_;
+
+      continue;
+    }
+
+    BlockHeader* block = page->GetBlock(ptr);
+    block->isFree_ = true;
+
+    if (!block->CanCoalesce()) {
+      AddFreeBlock(block);
+
+      return true;
+    }
+
+    Coalesce(block);
+
+    return true;
   }
 
   return false;
@@ -105,7 +123,7 @@ void CoalesceAllocator::FreePages() {
 void* CoalesceAllocator::SplitBlock(BlockHeader* block, int payloadSize) {
   int unusedSpace = block->size_ - payloadSize;
   block->size_ = payloadSize;
-  block->isEmpty_ = false;
+  block->isFree_ = false;
 
   BlockHeader* newBlock = new (block->data_ + payloadSize) BlockHeader();
   newBlock->size_ = unusedSpace;
@@ -153,7 +171,7 @@ void CoalesceAllocator::RemoveFreeBlock(BlockHeader* block) {
   }
 }
 
-// Linear search with first fit strategy
+// Linear search, first fit strategy
 CoalesceAllocator::BlockHeader* CoalesceAllocator::FindFreeBlock(int size) {
   PageHeader* currentPage = (PageHeader*)ptr_;
   BlockHeader* currentBlock = currentPage->freeListHead_;
@@ -174,4 +192,43 @@ CoalesceAllocator::BlockHeader* CoalesceAllocator::FindFreeBlock(int size) {
   }
 
   return currentBlock;
+}
+
+void memory_manager::CoalesceAllocator::Coalesce(BlockHeader* block) {
+  // Left neighbor coalesce
+  if (block->IsPreviousFree()) {
+    BlockHeader* previousBlock = block->previous_;
+    previousBlock->next_ = block->next_;
+    previousBlock->size_ += block->size_ + sizeof(BlockHeader);
+
+    if (block->HasNext()) {
+      block->next_->previous_ = previousBlock;
+    }
+
+    // Transform for right neighbor coalesce test
+    block = previousBlock;
+  }
+
+  // Right neighbor coalesce
+  if (block->IsNextFree()) {
+    BlockHeader* nextBlock = block->next_;
+    block->next_ = nextBlock->next_;
+    block->size_ += nextBlock->size_ + sizeof(BlockHeader);
+
+    if (nextBlock->HasNext()) {
+      nextBlock->next_->previous_ = block;
+    }
+
+    // Rewire free list
+    block->previousFreeBlock_ = nextBlock->previousFreeBlock_;
+    block->nextFreeBlock_ = nextBlock->nextFreeBlock_;
+
+    if (block->previousFreeBlock_) {
+      block->previousFreeBlock_->nextFreeBlock_ = block;
+    }
+
+    if (block->nextFreeBlock_) {
+      block->nextFreeBlock_->previousFreeBlock_ = block;
+    }
+  }
 }

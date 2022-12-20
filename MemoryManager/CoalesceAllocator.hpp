@@ -28,7 +28,7 @@ class CoalesceAllocator final : public Allocator {
     BlockHeader* nextFreeBlock_ = nullptr;
     size_t size_ = 0;
     byte* data_ = nullptr;
-    bool isEmpty_ = true;
+    bool isFree_ = true;
 
     bool Fits(int size) { return size <= size_; }
     bool CoversWholeBlock(int size) {
@@ -40,6 +40,10 @@ class CoalesceAllocator final : public Allocator {
     }
 
     bool HasNext() { return next_; }
+
+    bool IsPreviousFree() { return previous_ && previous_->isFree_; }
+    bool IsNextFree() { return next_ && next_->isFree_; }
+    bool CanCoalesce() { return IsPreviousFree() || IsNextFree(); }
   };
 
   struct PageHeader final {
@@ -52,6 +56,22 @@ class CoalesceAllocator final : public Allocator {
     bool ContainsPtr(void* ptr) {
       return ptr > ptr_ && ptr < (byte*)ptr_ + kMegabyte;
     }
+
+    BlockHeader* GetBlock(void* ptr) {
+      BlockHeader* block = (BlockHeader*)ptr_;
+
+      while (block) {
+        if (block->data_ != ptr) {
+          block = block->next_;
+
+          continue;
+        }
+
+        return block;
+      }
+
+      return nullptr;
+    }
   };
 
   void* ptr_;
@@ -63,6 +83,7 @@ class CoalesceAllocator final : public Allocator {
   void AddFreeBlock(BlockHeader* block);
   void RemoveFreeBlock(BlockHeader* block);
   BlockHeader* FindFreeBlock(int size);
+  void Coalesce(BlockHeader* block);
 };
 
 }  // namespace memory_manager
