@@ -77,13 +77,19 @@ class CoalesceAllocator final : public Allocator {
   void* AddPage();
   void FreePage(void* ptr);
   void FreePages();
-  void* SplitBlock(BlockHeader* block, int size);
   void AddFreeBlock(BlockHeader* block);
   void RemoveFreeBlock(BlockHeader* block);
   BlockHeader* FindFreeBlock(int size);
   void Coalesce(BlockHeader* block);
 
   void* ptr_;
+
+#ifdef _DEBUG
+  size_t pageCount_ = 0;
+  size_t freeBlockCount_ = 0;
+  size_t occupiedBlockCount_ = 0;
+  size_t pageSize_ = 0;
+#endif
 };
 
 }  // namespace memory_manager

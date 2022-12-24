@@ -27,8 +27,14 @@ void CoalesceAllocator::Destroy() {
 void* CoalesceAllocator::Alloc(size_t size) {
   Allocator::Alloc(size);
 
+#ifdef _DEBUG
+  --freeBlockCount_;
+  ++occupiedBlockCount_;
+#endif  // _DEBUG
+
   PageHeader* page = (PageHeader*)ptr_;
   BlockHeader* block = FindFreeBlock(size);
+
   block->isFree_ = false;
 
   RemoveFreeBlock(block);
@@ -37,14 +43,26 @@ void* CoalesceAllocator::Alloc(size_t size) {
     return block->data_;
   }
 
+#ifdef _DEBUG
+  ++freeBlockCount_;
+#endif  // _DEBUG
+
   // Shrink unused space
-  block->size_ = block->size_ - size;
+  size_t newBlockSize = block->size_ - size;
+  block->size_ = size;
 
   byte* newBlockAddress = block->data_ + block->size_;
   BlockHeader* newBlock = new (newBlockAddress) BlockHeader();
-
+  newBlock->size_ = newBlockSize;
+  newBlock->data_ = (byte*)newBlock + sizeof(BlockHeader);
   newBlock->next_ = block->next_;
   newBlock->previous_ = block;
+
+  block->next_ = newBlock;
+
+  if (newBlock->next_) {
+    newBlock->next_->previous_ = newBlock;
+  }
 
   AddFreeBlock(newBlock);
 
@@ -53,6 +71,11 @@ void* CoalesceAllocator::Alloc(size_t size) {
 
 bool CoalesceAllocator::Free(void* ptr) {
   Allocator::Free(ptr);
+
+#ifdef _DEBUG
+  ++freeBlockCount_;
+  --occupiedBlockCount_;
+#endif  // _DEBUG
 
   PageHeader* page = (PageHeader*)ptr_;
 
@@ -85,17 +108,57 @@ void CoalesceAllocator::DumpStat() const {
   assert(isInitialized_ &&
          "Allocator must be initialized with Init() before being used.");
   assert(!isDestroyed_ && "This allocator has already been destroyed.");
+
+  std::cout << "Statistics:" << std::endl;
+  std::cout << "\tCoalesce Allocator:\n";
+  std::cout << "--------------------" << std::endl;
+  std::cout << "Page count: " << pageCount_ << std::endl;
+  std::cout << "Free block count: " << freeBlockCount_ << std::endl;
+  std::cout << "Occupied block count: " << occupiedBlockCount_ << std::endl;
+  std::cout << "Page size: " << pageSize_ << " bytes" << std::endl;
+  std::cout << std::endl;
 }
 
 void CoalesceAllocator::DumpBlocks() const {
   assert(isInitialized_ &&
          "Allocator must be initialized with Init() before being used.");
   assert(!isDestroyed_ && "This allocator has already been destroyed.");
+
+  std::cout << "Dump:" << std::endl;
+  std::cout << "\tCoalesce Allocator:\n";
+  std::cout << "--------------------" << std::endl;
+
+  PageHeader* page = (PageHeader*)ptr_;
+  size_t pageIndex = 0;
+
+  while (page) {
+    std::cout << "Page number: " << pageIndex << std::endl;
+
+    BlockHeader* block = (BlockHeader*)page->ptr_;
+    while (block) {
+      std::cout << (block->isFree_ ? "Empty block: " : "Occupied block: ")
+                << (void*)block->data_ << " size: " << block->size_ << " bytes"
+                << std::endl;
+
+      block = block->next_;
+    }
+
+    page = page->next_;
+    ++pageIndex;
+  }
+
+  std::cout << std::endl;
 }
 #endif  // _DEBUG
 
 void* CoalesceAllocator::AddPage() {
-  void* ptr = VirtualAlloc(nullptr, 11 * kMegabyte, MEM_RESERVE | MEM_COMMIT,
+#ifdef _DEBUG
+  pageSize_ = 12 * kMegabyte;
+  ++freeBlockCount_;
+  ++pageCount_;
+#endif  // _DEBUG
+
+  void* ptr = VirtualAlloc(nullptr, 12 * kMegabyte, MEM_RESERVE | MEM_COMMIT,
                            PAGE_READWRITE);
 
   PageHeader* page = new (ptr) PageHeader();
@@ -103,7 +166,7 @@ void* CoalesceAllocator::AddPage() {
 
   BlockHeader* block = new (page->ptr_) BlockHeader();
   block->data_ = (byte*)block + sizeof(BlockHeader);
-  block->size_ = kMegabyte - sizeof(PageHeader) - sizeof(BlockHeader);
+  block->size_ = 12 * kMegabyte - sizeof(PageHeader) - sizeof(BlockHeader);
 
   page->freeListHead_ = block;
 
@@ -111,6 +174,11 @@ void* CoalesceAllocator::AddPage() {
 }
 
 void CoalesceAllocator::FreePage(void* ptr) {
+#ifdef _DEBUG
+  --freeBlockCount_;
+  --pageCount_;
+#endif  // _DEBUG
+
   VirtualFree(ptr, 0, MEM_RELEASE);
 }
 
@@ -118,7 +186,9 @@ void CoalesceAllocator::FreePages() {
   PageHeader* page = (PageHeader*)ptr_;
   PageHeader* nextPage = nullptr;
 
-  // TODO: add leak check
+#ifdef _DEBUG
+
+#endif
 
   while (page) {
     nextPage = page->next_;
@@ -129,29 +199,14 @@ void CoalesceAllocator::FreePages() {
   }
 }
 
-void* CoalesceAllocator::SplitBlock(BlockHeader* block, int payloadSize) {
-  int unusedSpace = block->size_ - payloadSize;
-  block->size_ = payloadSize;
-  block->isFree_ = false;
-
-  BlockHeader* newBlock = new (block->data_ + payloadSize) BlockHeader();
-  newBlock->size_ = unusedSpace;
-  newBlock->data_ = (byte*)newBlock + sizeof(BlockHeader);
-  newBlock->previous_ = block;
-  newBlock->next_ = block->next_;
-  if (newBlock->next_) {
-    newBlock->next_->previous_ = newBlock;
-  }
-
-  block->next_ = newBlock;
-
-  AddFreeBlock(newBlock);
-
-  return block->data_;
-}
-
 void CoalesceAllocator::AddFreeBlock(BlockHeader* block) {
   PageHeader* page = (PageHeader*)ptr_;
+
+  if (!page->freeListHead_) {
+    page->freeListHead_ = block;
+
+    return;
+  }
 
   block->nextFreeBlock_ = page->freeListHead_;
   page->freeListHead_->previousFreeBlock_ = block;
@@ -185,6 +240,16 @@ CoalesceAllocator::BlockHeader* CoalesceAllocator::FindFreeBlock(int size) {
   PageHeader* currentPage = (PageHeader*)ptr_;
   BlockHeader* currentBlock = currentPage->freeListHead_;
 
+  // Search for page with free blocks available
+  while (!currentBlock) {
+    if (!currentPage->HasNext()) {
+      currentPage->next_ = (PageHeader*)AddPage();
+    }
+
+    currentPage = currentPage->next_;
+    currentBlock = currentPage->freeListHead_;
+  }
+
   while (!currentBlock->Fits(size)) {
     currentBlock = currentBlock->nextFreeBlock_;
 
@@ -206,6 +271,10 @@ CoalesceAllocator::BlockHeader* CoalesceAllocator::FindFreeBlock(int size) {
 void CoalesceAllocator::Coalesce(BlockHeader* block) {
   // Left neighbor coalesce
   if (block->IsPreviousFree()) {
+#ifdef _DEBUG
+    --freeBlockCount_;
+#endif  // _DEBUG
+
     BlockHeader* previousBlock = block->previous_;
     previousBlock->next_ = block->next_;
     previousBlock->size_ += block->size_ + sizeof(BlockHeader);
@@ -220,6 +289,10 @@ void CoalesceAllocator::Coalesce(BlockHeader* block) {
 
   // Right neighbor coalesce
   if (block->IsNextFree()) {
+#ifdef _DEBUG
+    --freeBlockCount_;
+#endif  // _DEBUG
+
     BlockHeader* nextBlock = block->next_;
     block->next_ = nextBlock->next_;
     block->size_ += nextBlock->size_ + sizeof(BlockHeader);
