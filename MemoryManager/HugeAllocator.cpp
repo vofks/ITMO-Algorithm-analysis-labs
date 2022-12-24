@@ -23,6 +23,11 @@ void HugeAllocator::Destroy() {
 void* HugeAllocator::Alloc(size_t size) {
   Allocator::Alloc(size);
 
+#ifdef _DEBUG
+  ++pageCount_;
+  bytesAllocated_ += size;
+#endif  // _DEBUG
+
   if (!ptr_) {
     ptr_ = AddPage(size);
     PageHeader* page = (PageHeader*)ptr_;
@@ -45,12 +50,20 @@ bool HugeAllocator::Free(void* ptr) {
   Allocator::Free(ptr);
 
   PageHeader* page = (PageHeader*)ptr_;
+  PageHeader* previousPage = nullptr;
 
   while (page) {
+    previousPage = page;
+
     if (!page->ContainsPtr(ptr)) {
       page = page->next_;
 
       continue;
+    }
+
+    previousPage->next_ = page->next_;
+    if (page == ptr_) {
+      ptr_ = page->next_;
     }
 
     FreePage(page);
@@ -66,12 +79,33 @@ void HugeAllocator::DumpStat() const {
   assert(isInitialized_ &&
          "Allocator must be initialized with Init() before being used.");
   assert(!isDestroyed_ && "This allocator has already been destroyed.");
+
+  std::cout << "Statistics:" << std::endl;
+  std::cout << "\tOS Allocator:\n";
+  std::cout << "--------------------" << std::endl;
+  std::cout << "Page count: " << pageCount_ << std::endl;
+  std::cout << "Allocation size: " << bytesAllocated_ << " bytes" << std::endl;
+  std::cout << std::endl;
 }
 
 void HugeAllocator::DumpBlocks() const {
   assert(isInitialized_ &&
          "Allocator must be initialized with Init() before being used.");
   assert(!isDestroyed_ && "This allocator has already been destroyed.");
+
+  std::cout << "Dump:" << std::endl;
+  std::cout << "\tOS Allocator:\n";
+  std::cout << "--------------------" << std::endl;
+
+  PageHeader* page = (PageHeader*)ptr_;
+  while (page) {
+    std::cout << "Occupied block: " << page->ptr_ << " size: " << page->size_
+              << "bytes" << std::endl;
+
+    page = page->next_;
+  }
+
+  std::cout << std::endl;
 }
 
 #endif  // _DEBUG
@@ -92,13 +126,25 @@ void* HugeAllocator::AddPage(size_t size) {
   return ptr;
 }
 
-void HugeAllocator::FreePage(void* ptr) { VirtualFree(ptr, 0, MEM_RELEASE); }
+void HugeAllocator::FreePage(void* ptr) {
+#ifdef _DEBUG
+  --pageCount_;
+  PageHeader* page = (PageHeader*)ptr;
+  bytesAllocated_ -= page->size_;
+#endif  // _DEBUG
+
+  VirtualFree(ptr, 0, MEM_RELEASE);
+}
 
 void HugeAllocator::FreePages() {
   PageHeader* page = (PageHeader*)ptr_;
   PageHeader* nextPage = nullptr;
 
-  // TODO: add leak check
+#ifdef _DEBUG
+  assert(!ptr_,
+         "Memory leak. All acquired blocks must be freed before calling "
+         "Destroy().");
+#endif
 
   while (page) {
     nextPage = page->next_;

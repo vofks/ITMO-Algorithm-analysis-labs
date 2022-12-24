@@ -36,6 +36,11 @@ class HugeAllocator final : public Allocator {
   void FreePages();
 
   void* ptr_;
+
+#ifdef _DEBUG
+  size_t pageCount_ = 0;
+  size_t bytesAllocated_ = 0;
+#endif  // _DEBUG
 };
 }  // namespace memory_manager
 
