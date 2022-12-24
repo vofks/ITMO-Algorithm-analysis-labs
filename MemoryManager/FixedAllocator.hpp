@@ -112,6 +112,12 @@ class FixedAllocator final : public Allocator {
   int blockSize_;
   int pageSize_;
   void* ptr_;
+
+#ifdef _DEBUG
+  size_t pageCount_ = 0;
+  size_t freeblockCount_ = 0;
+  size_t occupiedBlockCount_ = 0;
+#endif
 };
 }  // namespace memory_manager
 
