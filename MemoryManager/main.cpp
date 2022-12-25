@@ -5,25 +5,31 @@
 #include <string>
 #include <vector>
 
-#include "./Constants.hpp"
-#include "./FixedAllocator.hpp"
-#include "windows.h"
+#include "./MemoryManager.hpp"
 
 using namespace memory_manager;
 
 int main() {
-  FixedAllocator a = FixedAllocator(k16Bytes, kMegabyte);
-  a.Init();
-  void* ptr = a.Alloc(16 * sizeof(memory_manager::byte));
-  void* ptr1 = a.Alloc(16 * sizeof(memory_manager::byte));
-  void* ptr2 = a.Alloc(16 * sizeof(memory_manager::byte));
+  MemoryManager m = MemoryManager();
 
-  char* str = (char*)ptr2;
-  //*(str - 1) = 'a';
-  //*(str + 16) = 'a';
+  m.Init();
 
-  a.Free(ptr);
-  a.Free(ptr1);
-  a.Free(ptr2);
-  a.Destroy();
+  void* ptr = m.Alloc(15);
+  void* ptr1 = m.Alloc(20);
+  void* ptr2 = m.Alloc(50);
+  void* ptr3 = m.Alloc(120);
+  void* ptr4 = m.Alloc(200);
+  void* ptr5 = m.Alloc(400);
+
+  //m.DumpStat();
+  //m.DumpBlocks();
+
+  m.Free(ptr);
+  m.Free(ptr1);
+  m.Free(ptr2);
+  m.Free(ptr3);
+  m.Free(ptr4);
+  m.Free(ptr5);
+
+  m.Destroy();
 }
