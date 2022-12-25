@@ -1,6 +1,10 @@
 #ifndef _FIXED_ALLOCATOR_HPP_
 #define _FIXED_ALLOCATOR_HPP_
 
+#ifdef _DEBUG
+#include <cassert>
+#endif
+
 #include <cstring>
 
 #include "./Allocator.hpp"
