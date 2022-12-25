@@ -1,8 +1,6 @@
 #ifndef _MEMORY_ALLOCATOR_HPP_
 #define _MEMORY_ALLOCATOR_HPP_
 
-#include <vector>
-
 #include "./CoalesceAllocator.hpp"
 #include "./Constants.hpp"
 #include "./FixedAllocator.hpp"

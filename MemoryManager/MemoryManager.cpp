@@ -1,10 +1,6 @@
 #ifdef _DEBUG
-#include <cassert>
 #include <iostream>
 #endif  // _DEBUG
-
-#include <algorithm>
-#include <vector>
 
 #include "MemoryManager.hpp"
 #include "windows.h"
@@ -64,7 +60,9 @@ void* MemoryManager::Alloc(size_t size) {
 }
 
 void MemoryManager::Free(void* ptr) {
-  for (int i = 0; i < 6; ++i) {
+  const int kFSA_Count = sizeof(fixedAllocators_) / sizeof(fixedAllocators_[0]);
+
+  for (int i = 0; i < kFSA_Count; ++i) {
     fixedAllocators_[i].Free(ptr);
   }
 
@@ -74,8 +72,32 @@ void MemoryManager::Free(void* ptr) {
 
 #ifdef _DEBUG
 
-void MemoryManager::DumpStat() const {}
+void MemoryManager::DumpStat() const {
+  std::cout << "\tMemory Manager: " << std::endl;
+  std::cout << "--------------------" << std::endl;
 
-void MemoryManager::DumpBlocks() const {}
+  const int kFSA_Count = sizeof(fixedAllocators_) / sizeof(fixedAllocators_[0]);
+
+  for (int i = 0; i < kFSA_Count; ++i) {
+    fixedAllocators_[i].DumpStat();
+  }
+
+  coalesceAllocator_.DumpStat();
+  hugeAllocator_.DumpStat();
+}
+
+void MemoryManager::DumpBlocks() const {
+  std::cout << "\tMemory Manager: " << std::endl;
+  std::cout << "--------------------" << std::endl;
+
+  const int kFSA_Count = sizeof(fixedAllocators_) / sizeof(fixedAllocators_[0]);
+
+  for (int i = 0; i < kFSA_Count; ++i) {
+    fixedAllocators_[i].DumpBlocks();
+  }
+
+  coalesceAllocator_.DumpBlocks();
+  hugeAllocator_.DumpBlocks();
+}
 
 #endif  // _DEBUG
