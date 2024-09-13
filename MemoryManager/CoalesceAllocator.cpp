@@ -1,0 +1,316 @@
+#ifdef _DEBUG
+#include <cassert>
+#include <iostream>
+#endif  // _DEBUG
+
+#include "CoalesceAllocator.hpp"
+#include "windows.h"
+
+using memory_manager::CoalesceAllocator;
+
+CoalesceAllocator::CoalesceAllocator() : ptr_(nullptr) {}
+
+CoalesceAllocator::~CoalesceAllocator() { Allocator::~Allocator(); }
+
+void CoalesceAllocator::Init() {
+  Allocator::Init();
+
+  ptr_ = AddPage();
+}
+
+void CoalesceAllocator::Destroy() {
+  Allocator::Destroy();
+
+  FreePages();
+}
+
+void* CoalesceAllocator::Alloc(size_t size) {
+  Allocator::Alloc(size);
+
+#ifdef _DEBUG
+  --freeBlockCount_;
+  ++occupiedBlockCount_;
+#endif  // _DEBUG
+
+  PageHeader* page = (PageHeader*)ptr_;
+  BlockHeader* block = FindFreeBlock(size);
+
+  block->isFree_ = false;
+
+  RemoveFreeBlock(block);
+
+  if (!block->HasUnusedSpace(size)) {
+    return block->data_;
+  }
+
+#ifdef _DEBUG
+  ++freeBlockCount_;
+#endif  // _DEBUG
+
+  // Shrink unused space
+  size_t newBlockSize = block->size_ - size;
+  block->size_ = size;
+
+  byte* newBlockAddress = block->data_ + block->size_;
+  BlockHeader* newBlock = new (newBlockAddress) BlockHeader();
+  newBlock->size_ = newBlockSize;
+  newBlock->data_ = (byte*)newBlock + sizeof(BlockHeader);
+  newBlock->next_ = block->next_;
+  newBlock->previous_ = block;
+
+  block->next_ = newBlock;
+
+  if (newBlock->next_) {
+    newBlock->next_->previous_ = newBlock;
+  }
+
+  AddFreeBlock(newBlock);
+
+  return block->data_;
+}
+
+bool CoalesceAllocator::Free(void* ptr) {
+  Allocator::Free(ptr);
+
+#ifdef _DEBUG
+  ++freeBlockCount_;
+  --occupiedBlockCount_;
+#endif  // _DEBUG
+
+  PageHeader* page = (PageHeader*)ptr_;
+
+  while (page) {
+    if (!page->ContainsPtr(ptr)) {
+      page = page->next_;
+
+      continue;
+    }
+
+    BlockHeader* block = page->GetBlock(ptr);
+    block->isFree_ = true;
+
+    if (!block->CanCoalesce()) {
+      AddFreeBlock(block);
+
+      return true;
+    }
+
+    Coalesce(block);
+
+    return true;
+  }
+
+  return false;
+}
+
+#ifdef _DEBUG
+void CoalesceAllocator::DumpStat() const {
+  assert(isInitialized_ &&
+         "Allocator must be initialized with Init() before being used.");
+  assert(!isDestroyed_ && "This allocator has already been destroyed.");
+
+  std::cout << "Statistics:" << std::endl;
+  std::cout << "\tCoalesce Allocator:\n";
+  std::cout << "--------------------" << std::endl;
+  std::cout << "Page count: " << pageCount_ << std::endl;
+  std::cout << "Free block count: " << freeBlockCount_ << std::endl;
+  std::cout << "Occupied block count: " << occupiedBlockCount_ << std::endl;
+  std::cout << "Page size: " << pageSize_ << " bytes" << std::endl;
+  std::cout << std::endl;
+}
+
+void CoalesceAllocator::DumpBlocks() const {
+  assert(isInitialized_ &&
+         "Allocator must be initialized with Init() before being used.");
+  assert(!isDestroyed_ && "This allocator has already been destroyed.");
+
+  std::cout << "Dump:" << std::endl;
+  std::cout << "\tCoalesce Allocator:\n";
+  std::cout << "--------------------" << std::endl;
+
+  PageHeader* page = (PageHeader*)ptr_;
+  size_t pageIndex = 0;
+
+  while (page) {
+    std::cout << "Page number: " << pageIndex << std::endl;
+
+    BlockHeader* block = (BlockHeader*)page->ptr_;
+    while (block) {
+      std::cout << (block->isFree_ ? "Empty block: " : "Occupied block: ")
+                << (void*)block->data_ << " size: " << block->size_ << " bytes"
+                << std::endl;
+
+      block = block->next_;
+    }
+
+    page = page->next_;
+    ++pageIndex;
+  }
+
+  std::cout << std::endl;
+}
+#endif  // _DEBUG
+
+void* CoalesceAllocator::AddPage() {
+#ifdef _DEBUG
+  pageSize_ = 12 * kMegabyte;
+  ++freeBlockCount_;
+  ++pageCount_;
+#endif  // _DEBUG
+
+  void* ptr = VirtualAlloc(nullptr, 12 * kMegabyte, MEM_RESERVE | MEM_COMMIT,
+                           PAGE_READWRITE);
+
+  PageHeader* page = new (ptr) PageHeader();
+  page->ptr_ = (byte*)page + sizeof(PageHeader);
+
+  BlockHeader* block = new (page->ptr_) BlockHeader();
+  block->data_ = (byte*)block + sizeof(BlockHeader);
+  block->size_ = 12 * kMegabyte - sizeof(PageHeader) - sizeof(BlockHeader);
+
+  page->freeListHead_ = block;
+
+  return ptr;
+}
+
+void CoalesceAllocator::FreePage(void* ptr) {
+#ifdef _DEBUG
+  --freeBlockCount_;
+  --pageCount_;
+#endif  // _DEBUG
+
+  VirtualFree(ptr, 0, MEM_RELEASE);
+}
+
+void CoalesceAllocator::FreePages() {
+  PageHeader* page = (PageHeader*)ptr_;
+  PageHeader* nextPage = nullptr;
+
+#ifdef _DEBUG
+
+#endif
+
+  while (page) {
+    nextPage = page->next_;
+
+    FreePage(page);
+
+    page = nextPage;
+  }
+}
+
+void CoalesceAllocator::AddFreeBlock(BlockHeader* block) {
+  PageHeader* page = (PageHeader*)ptr_;
+
+  if (!page->freeListHead_) {
+    page->freeListHead_ = block;
+
+    return;
+  }
+
+  block->nextFreeBlock_ = page->freeListHead_;
+  page->freeListHead_->previousFreeBlock_ = block;
+  page->freeListHead_ = block;
+}
+
+void CoalesceAllocator::RemoveFreeBlock(BlockHeader* block) {
+  PageHeader* page = (PageHeader*)ptr_;
+
+  if (block == page->freeListHead_) {
+    page->freeListHead_ = block->nextFreeBlock_;
+
+    if (block->nextFreeBlock_) {
+      block->nextFreeBlock_->previousFreeBlock_ = nullptr;
+    }
+
+    return;
+  }
+
+  if (block->previousFreeBlock_) {
+    block->previousFreeBlock_->nextFreeBlock_ = block->nextFreeBlock_;
+  }
+
+  if (block->nextFreeBlock_) {
+    block->nextFreeBlock_->previousFreeBlock_ = block->previousFreeBlock_;
+  }
+}
+
+// Linear search, first fit strategy
+CoalesceAllocator::BlockHeader* CoalesceAllocator::FindFreeBlock(int size) {
+  PageHeader* currentPage = (PageHeader*)ptr_;
+  BlockHeader* currentBlock = currentPage->freeListHead_;
+
+  // Search for page with free blocks available
+  while (!currentBlock) {
+    if (!currentPage->HasNext()) {
+      currentPage->next_ = (PageHeader*)AddPage();
+    }
+
+    currentPage = currentPage->next_;
+    currentBlock = currentPage->freeListHead_;
+  }
+
+  while (!currentBlock->Fits(size)) {
+    currentBlock = currentBlock->nextFreeBlock_;
+
+    if (currentBlock) {
+      continue;
+    }
+
+    if (!currentPage->HasNext()) {
+      currentPage->next_ = (PageHeader*)AddPage();
+    }
+
+    currentPage = currentPage->next_;
+    currentBlock = currentPage->freeListHead_;
+  }
+
+  return currentBlock;
+}
+
+void CoalesceAllocator::Coalesce(BlockHeader* block) {
+  // Left neighbor coalesce
+  if (block->IsPreviousFree()) {
+#ifdef _DEBUG
+    --freeBlockCount_;
+#endif  // _DEBUG
+
+    BlockHeader* previousBlock = block->previous_;
+    previousBlock->next_ = block->next_;
+    previousBlock->size_ += block->size_ + sizeof(BlockHeader);
+
+    if (block->HasNext()) {
+      block->next_->previous_ = previousBlock;
+    }
+
+    // Transform for right neighbor coalesce test
+    block = previousBlock;
+  }
+
+  // Right neighbor coalesce
+  if (block->IsNextFree()) {
+#ifdef _DEBUG
+    --freeBlockCount_;
+#endif  // _DEBUG
+
+    BlockHeader* nextBlock = block->next_;
+    block->next_ = nextBlock->next_;
+    block->size_ += nextBlock->size_ + sizeof(BlockHeader);
+
+    if (nextBlock->HasNext()) {
+      nextBlock->next_->previous_ = block;
+    }
+
+    // Rewire free list
+    block->previousFreeBlock_ = nextBlock->previousFreeBlock_;
+    block->nextFreeBlock_ = nextBlock->nextFreeBlock_;
+
+    if (block->previousFreeBlock_) {
+      block->previousFreeBlock_->nextFreeBlock_ = block;
+    }
+
+    if (block->nextFreeBlock_) {
+      block->nextFreeBlock_->previousFreeBlock_ = block;
+    }
+  }
+}
